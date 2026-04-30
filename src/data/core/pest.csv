@@ -1,0 +1,41 @@
+Category,Crop,All_Pests,Most_Common,Water_Trigger,Weather_Trigger,Location_Trigger,Crop_Trigger,Others
+Grains & Cereals,Rice,"Stem Borer, Brown Planthopper, Leaf Folder, Gall Midge, Hispa","Brown Planthopper 🚨, Stem Borer",High water → Planthopper,Warm humid → outbreak,"WB, Assam","Tillering, flowering",Dense planting ↑ risk
+Grains & Cereals,Wheat,"Aphids, Termites, Armyworm",Aphids 🚨,Dry → Termites,Cool → Aphids,North/East India,Grain filling,Late sowing ↑ risk
+Grains & Cereals,Maize,"Fall Armyworm, Stem Borer, Earworm",Armyworm 🚨,Humid → Armyworm,Monsoon ↑,Pan India,Early stage,Night pest
+Grains & Cereals,Barley,"Aphids, Armyworm",Aphids,Moderate humidity,Cool,North,Grain stage,Similar to wheat
+Grains & Cereals,Bajra,"Shoot Fly, Stem Borer",Shoot Fly,Dry ↑,Hot dry,Rajasthan,Seedling,Early attack
+Grains & Cereals,Jowar,"Shoot Fly, Midge",Shoot Fly,Moderate moisture,Warm,Central India,Early stage,Similar to Bajra
+Grains & Cereals,Ragi,"Stem Borer, Aphids",Aphids,Humid ↑,Warm,South/East,Vegetative,Minor pest pressure
+Pulses,Arhar (Tur),"Pod Borer, Aphids, Spodoptera",Pod Borer 🚨,Dry ↑,Warm,India-wide,Flowering,Severe yield loss
+Pulses,Chana,"Pod Borer, Cutworm",Pod Borer 🚨,Dry,Cool,North/WB,Flowering,Night pest
+Pulses,Moong,"Whiteflies, Thrips",Whiteflies 🚨,Humid,Warm,WB,Vegetative,Virus spread
+Pulses,Urad,"Aphids, Leafhopper",Leafhopper,Humid,Warm,East India,Early stage,Sap sucking
+Pulses,Masoor,Aphids,Aphids,Moderate,Cool,North,Vegetative,Low diversity
+Pulses,Kidney Beans,"Bean Fly, Aphids",Bean Fly,Moist,Cool,Hills/East,Seedling,Root damage
+Pulses,Moth Beans,"Thrips, Caterpillars",Thrips,Dry,Hot,Dry regions,Vegetative,Low moisture pest
+Vegetables,Potato / Tomato / Onion,"Fruit Borer, Aphids, Thrips, Whiteflies",Fruit Borer 🚨,Humid → Whiteflies,Warm,WB,Fruiting,Virus risk
+Vegetables,Brinjal,"Shoot & Fruit Borer, Aphids",Borer 🚨,Humid,Warm,India-wide,Fruiting,Internal damage
+Vegetables,Cabbage / Cauliflower / Spinach,"Diamondback Moth, Aphids",DBM 🚨,Humid,Cool,WB,Leaf stage,Fast spread
+Vegetables,Okra,"Aphids, Whiteflies",Whiteflies 🚨,Humid,Warm,India,Vegetative,Virus
+Vegetables,Carrot / Radish / Peas,"Root Maggot, Aphids",Root Maggot,Wet soil,Cool,North/East,Root stage,Soil pest
+Vegetables,Capsicum / Chili,"Thrips, Mites",Thrips 🚨,Dry,Hot,WB,Flowering,Leaf curl
+Vegetables,Gourds,Fruit Fly 🚨,Fruit Fly,Humid,Rainy,WB,Fruiting,Major loss
+Vegetables,Cucumber / Beans / Garlic,"Aphids, Beetles",Aphids,Humid,Warm,Common,Vegetative,Sap sucking
+Vegetables,Leafy (Fenugreek etc.),Aphids,Aphids,Cool moist,Winter,WB,Leaf stage,Fast spread
+Fruits,Mango,"Fruit Fly, Hopper, Mealybug",Fruit Fly 🚨,Humid,Rainy,WB,Fruiting,Post harvest
+Fruits,Banana,"Weevil, Aphids",Weevil 🚨,Wet,Humid,East India,Root/stem,Hidden pest
+Fruits,Apple,Codling Moth,Same,Moderate,Cool,Hills,Fruit,Region-specific
+Fruits,Guava / Orange,"Fruit Fly, Aphids",Fruit Fly 🚨,Humid,Warm,WB,Fruiting,Common
+Fruits,Mixed fruits,"Mealybugs, Mites",Mealybugs,Humid,Warm,India,All,Sap sucking
+Fruits,Melons,Fruit Fly 🚨,Fruit Fly,Humid,Rainy,WB,Fruit,Severe
+Fruits,Coconut,Rhinoceros Beetle,Same,Coastal humidity,Warm,Coastal,Crown,Tree damage
+Fruits,Nuts,"Borers, Aphids",Borers,Moderate,Warm,Region-based,Tree stage,Slow damage
+Cash Crops,Sugarcane,Stem Borer 🚨,Same,Humid,Warm,India,Stem,Internal
+Cash Crops,Coffee / Tea,"Berry Borer, Mosquito Bug",Same,Humid,Rainy,South/WB,Leaf/fruit,Plantation issue
+Cash Crops,Spices,"Thrips, Rot pests",Thrips,Wet,Humid,South,Root,Rot
+Cash Crops,Pepper/Cardamom,Thrips,Same,Humid,Rainy,South,Leaf,High sensitivity
+Fiber & Oil,Cotton,"Bollworm 🚨, Whiteflies",Bollworm,Dry,Hot,Gujarat,Boll,Resistance
+Fiber & Oil,Jute,Caterpillar,Same,Humid,Rainy,WB,Leaf,Regional
+Fiber & Oil,Oilseeds,"Aphids, Whiteflies",Aphids,Humid,Cool,India,Vegetative,Sap sucking
+Flowers,All flowers,"Thrips 🚨, Aphids, Mites",Thrips,Humid,Warm,WB,Flowering,Quality loss
+Seeds,All Seeds,"Cutworms, Aphids, Fungus Gnats",Damping-off 🚨,Overwatering,Cool + wet,Everywhere,Germination,Critical stage

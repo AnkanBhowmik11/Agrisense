@@ -1,0 +1,58 @@
+Commodity,Country,Unit,Year,Quantity,Source,hscodeqty,Trade
+Wheat,World,ThMT,Feb 2023,17.98,DGCIS,10019910 : 17.98,Export
+Wheat,World,ThMT,Mar 2023,18.42,DGCIS,10019910 : 18.42,Export
+Wheat,World,ThMT,Apr 2023,1.63,DGCIS,10019910 : 1.63,Export
+Wheat,World,ThMT,May 2023,1.38,DGCIS,10019910 : 1.38,Export
+Wheat,World,ThMT,Jun 2023,1.37,DGCIS,10019910 : 1.37,Export
+Wheat,World,ThMT,Jul 2023,7.25,DGCIS,"10011900 : 0.06
+10019910 : 7.18",Export
+Wheat,World,ThMT,Aug 2023,41.3,DGCIS,10019910 : 41.30,Export
+Wheat,World,ThMT,Sep 2023,19.12,DGCIS,"10011900 : 0.00
+10019910 : 19.11",Export
+Wheat,World,ThMT,Oct 2023,7.27,DGCIS,10019910 : 7.27,Export
+Wheat,World,ThMT,Nov 2023,16.94,DGCIS,10019910 : 16.94,Export
+Wheat,World,ThMT,Dec 2023,22.22,DGCIS,"10011900 : 0.03
+10019910 : 22.19",Export
+Wheat,World,ThMT,Jan 2024,25.71,DGCIS,10019910 : 25.71,Export
+Wheat,World,ThMT,Feb 2024,35.42,DGCIS,"10019910 : 35.42
+10011900 : 0.00",Export
+Wheat,World,ThMT,Mar 2024,8.47,DGCIS,"10019910 : 8.47
+10011900 : 0.00",Export
+Wheat,World,ThMT,Apr 2024,0.36,DGCIS,10019910 : 0.36,Export
+Wheat,World,ThMT,May 2024,0.0,DGCIS,10011900 : 0.00,Export
+Wheat,World,ThMT,Jun 2024,0.67,DGCIS,10019910 : 0.67,Export
+Wheat,World,ThMT,Jul 2024,0.12,DGCIS,10019910 : 0.12,Export
+Wheat,World,ThMT,Aug 2024,0.35,DGCIS,"10011900 : 0.00
+10019910 : 0.35",Export
+Wheat,World,ThMT,Sep 2024,0.05,DGCIS,"10019910 : 0.05
+10011900 : 0.00",Export
+Wheat,World,ThMT,Oct 2024,0.0,DGCIS,"10019910 : 0.00
+10011900 : 0.00",Export
+Wheat,World,ThMT,Nov 2024,0.0,DGCIS,"10019910 : 0.00
+10011900 : 0.00",Export
+Wheat,World,ThMT,Dec 2024,0.0,DGCIS,"10019910 : 0.00
+10011900 : 0.00",Export
+Wheat,World,ThMT,Jan 2025,0.02,DGCIS,"10011900 : 0.00
+10019910 : 0.02",Export
+Wheat,World,ThMT,Feb 2025,0.28,DGCIS,"10019910 : 0.28
+10011900 : 0.00",Export
+Wheat,World,ThMT,Mar 2025,0.82,DGCIS,"10011900 : 0.00
+10019910 : 0.82",Export
+Wheat,World,ThMT,Apr 2025,0.1,DGCIS,10019910 : 0.10,Export
+Wheat,World,ThMT,May 2025,0.25,DGCIS,10019910 : 0.25,Export
+Wheat,World,ThMT,Jun 2025,0.0,DGCIS,"10019910 : 0.00
+10011900 : 0.00",Export
+Wheat,World,ThMT,Jul 2025,0.0,DGCIS,"10019910 : 0.00
+10011900 : 0.00",Export
+Wheat,World,ThMT,Aug 2025,2.05,DGCIS,"10011900 : 0.00
+10019910 : 2.05",Export
+Wheat,World,ThMT,Sep 2025,7.15,DGCIS,"10011900 : 0.00
+10019910 : 7.15",Export
+Wheat,World,ThMT,Oct 2025,2.44,DGCIS,"10019910 : 2.44
+10011900 : 0.00",Export
+Wheat,World,ThMT,Nov 2025,2.44,DGCIS,"10011900 : 0.00
+10019910 : 2.44",Export
+Wheat,World,ThMT,Dec 2025,1.74,DGCIS,"10011900 : 0.00
+10019910 : 1.74",Export
+Wheat,World,ThMT,Jan 2026,1.81,DGCIS,"10011900 : 0.00
+10019910 : 1.81",Export

@@ -1,0 +1,52 @@
+Crop,Category,CompostType,Dosage,ApplicationStage,IndustrialLogic,MaintenanceNotes
+Rice (Paddy),Grains & Cereals,"FYM, Green manure (Dhaincha/Sunhemp), Vermicompost",5–10 tons/acre,2–3 weeks before transplanting,Waterlogged fields: green manure works best; Clay: moderate,Avoid fresh manure (toxicity risk)
+Wheat,Grains & Cereals,"FYM, Vermicompost",4–8 tons/acre,Before sowing,Sandy soil: increase compost,Well-rotted compost only
+Maize (Corn),Grains & Cereals,"FYM, Vermicompost",5–10 tons/acre,Basal + Side application,Heavy feeder: higher compost,Improves moisture retention
+Barley,Grains & Cereals,FYM,3–5 tons/acre,Basal,Low input crop,Minimal requirement
+Bajra (Pearl Millet),Grains & Cereals,FYM,2–4 tons/acre,Basal,Dryland crop,Improves drought tolerance
+Jowar (Sorghum),Grains & Cereals,FYM,4–6 tons/acre,Basal,Medium fertility,Improves yield stability
+Ragi,Grains & Cereals,FYM + Compost mix,5–8 tons/acre,Before sowing,Poor soil: compost critical,Enhances micronutrients
+Arhar (Tur),Pulses,"FYM, Vermicompost",4–6 tons/acre,Basal,Improves root nodulation,Don’t overapply N-rich compost
+Chana (Gram),Pulses,FYM,3–5 tons/acre,Basal,Light soil: compost helpful,Avoid excess organic N
+Moong,Pulses,FYM,2–4 tons/acre,Basal,Short crop: light compost,Improves soil structure
+Urad,Pulses,FYM,2–4 tons/acre,Basal,Short crop: light compost,Improves soil structure
+Masoor,Pulses,FYM,2–4 tons/acre,Basal,Low input crop,Standard application
+Kidney Beans,Pulses,"FYM, Vermicompost",5–7 tons/acre,Soil prep,Needs rich soil,Standard application
+Moth Beans,Pulses,FYM,1–3 tons/acre,Basal,Dry region crop,Standard application
+Potato,Vegetables,"FYM, Vermicompost",8–12 tons/acre,Before planting,Loose soil essential,Improves tuber size
+Tomato,Vegetables,"Vermicompost, FYM",6–10 tons/acre,Basal + Top dressing,Heavy feeder,Regular addition improves yield
+Onion,Vegetables,FYM,5–8 tons/acre,Before planting,Light soil preferred,Avoid fresh compost
+Brinjal,Vegetables,FYM + Vermicompost,8–10 tons/acre,Continuous,Long duration crop,Regular feeding
+Cabbage,Vegetables,Vermicompost,6–10 tons/acre,Regular,Fast growth crops,Standard application
+Cauliflower,Vegetables,Vermicompost,6–10 tons/acre,Regular,Fast growth crops,Standard application
+Spinach,Vegetables,Vermicompost,6–10 tons/acre,Regular,Fast growth crops,Standard application
+Okra,Vegetables,FYM,5–7 tons/acre,Basal,Moderate feeder,Standard application
+Carrot,Vegetables,Well-rotted compost,5–6 tons/acre,Before sowing,Loose soil,Fresh manure causes forked roots
+Radish,Vegetables,Well-rotted compost,5–6 tons/acre,Before sowing,Loose soil,Fresh manure causes forked roots
+Capsicum,Vegetables,Vermicompost,6–8 tons/acre,Basal + Flowering,Sensitive crop,Standard application
+Chili,Vegetables,Vermicompost,6–8 tons/acre,Basal + Flowering,Sensitive crop,Standard application
+Pumpkin,Vegetables,FYM,8–12 tons/acre (pit),Before planting,Spreading crop,Fast growth
+Bottle Gourd,Vegetables,FYM,8–12 tons/acre (pit),Before planting,Spreading crop,Fast growth
+Bitter Gourd,Vegetables,FYM,8–12 tons/acre (pit),Before planting,Spreading crop,Fast growth
+Cucumber,Vegetables,FYM,5–7 tons/acre,Basal,Well-drained soil,Standard application
+Mango,Fruits & Nuts,FYM,10–20 kg/tree/year,Annual (pre-monsoon),Tree-based feeding,Standard application
+Banana,Fruits & Nuts,FYM + Mulch,10–15 tons/acre,Continuous,Heavy feeder,Standard application
+Citrus,Fruits & Nuts,FYM,10–15 kg/tree/year,Regular,Improves soil structure,Standard application
+Guava,Fruits & Nuts,FYM,10–15 kg/tree/year,Regular,Improves soil structure,Standard application
+Papaya,Fruits & Nuts,Vermicompost,5–10 kg/plant,Growth stage,Fruit quality focus,Standard application
+Grapes,Fruits & Nuts,Vermicompost,5–10 kg/plant,Growth stage,Fruit quality focus,Standard application
+Pomegranate,Fruits & Nuts,Vermicompost,5–10 kg/plant,Growth stage,Fruit quality focus,Standard application
+Watermelon,Fruits & Nuts,FYM,8–10 tons/acre,Pit application,Fast growth,Standard application
+Muskmelon,Fruits & Nuts,FYM,8–10 tons/acre,Pit application,Fast growth,Standard application
+Coconut,Fruits & Nuts,FYM + Husk compost,20–30 kg/tree/year,Basin application,Moisture retention,Standard application
+Sugarcane,Cash Crops,Press mud + FYM,10–15 tons/acre,Before planting,Heavy feeder,Standard application
+Coffee,Cash Crops,Organic mulch,Continuous layer,Basal,Moisture retention
+Tea,Cash Crops,Organic mulch,Continuous layer,Basal,Moisture retention
+Ginger,Cash Crops,Organic compost,6–10 tons/acre,Basal,Root crop support,Standard application
+Turmeric,Cash Crops,Organic compost,6–10 tons/acre,Basal,Root crop support,Standard application
+Cumin,Cash Crops,Organic compost,6–10 tons/acre,Basal,Root crop support,Standard application
+Cotton,Fiber,FYM,5–8 tons/acre,Basal,Improves soil structure,Standard application
+Jute,Fiber,FYM,5–6 tons/acre,Basal,Humid soil support,Standard application
+Oilseeds,Oilseeds,FYM,4–6 tons/acre,Basal,Moderate requirement,Standard application
+Flowers,Ornamental,Vermicompost + FYM,5–8 tons/acre,Regular,Improves quality,Standard application
+Nursery,Seeds,Vermicompost + Cocopeat,Soil mix (30–40%),Nursery,Light sterile soil,Overuse kills seedlings

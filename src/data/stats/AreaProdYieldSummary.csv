@@ -1,0 +1,21 @@
+Country,Year,Crop,Production (Million Tonnes),Total,Percentage,Source
+India,2015,Rice,156.54,732.9,21.36,FAO
+Rest of the World,2015,Rice,576.36,732.9,78.64,FAO
+India,2016,Rice,163.7,737.09,22.21,FAO
+Rest of the World,2016,Rice,573.39,737.09,77.79,FAO
+India,2017,Rice,169.14,751.12,22.52,FAO
+Rest of the World,2017,Rice,581.98,751.12,77.48,FAO
+India,2018,Rice,174.72,761.03,22.96,FAO
+Rest of the World,2018,Rice,586.31,761.03,77.04,FAO
+Rest of the World,2019,Rice,574.98,753.29,76.33,FAO
+India,2019,Rice,178.31,753.29,23.67,FAO
+Rest of the World,2020,Rice,582.73,769.23,75.75,FAO
+India,2020,Rice,186.5,769.23,24.25,FAO
+Rest of the World,2021,Rice,591.87,787.29,75.18,FAO
+India,2021,Rice,195.42,787.29,24.82,FAO
+India,2022,Rice,196.25,776.46,25.27,FAO
+Rest of the World,2022,Rice,580.22,776.46,74.73,FAO
+Rest of the World,2023,Rice,1790.97,2414.23,74.18,FAO
+India,2023,Rice,623.26,2414.23,25.82,FAO
+India,2024,Rice,217.87,819.82,26.58,FAO
+Rest of the World,2024,Rice,601.95,819.82,73.42,FAO

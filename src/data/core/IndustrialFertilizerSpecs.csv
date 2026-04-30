@@ -1,0 +1,54 @@
+Crop,Category,PrimaryFertilizers,StageWiseAdvice,IndustrialLogic
+Rice (Paddy),Grains & Cereals,"Urea (major split), DAP / SSP, MOP","Basal: DAP + Potash; Tillering: 50% N; Panicle: Rem. N + K","Waterlogged: split N; Leaching risk: more splits; Clay: less frequent"
+Wheat,Grains & Cereals,"Urea, DAP, MOP","Basal: DAP; Crown Root: N (Critical); Grain Fill: K","Cool temp: better N use; Sandy: split N"
+Maize (Corn),Grains & Cereals,"Urea, DAP, NPK mix","Early: N; Knee-high: N; Cob formation: K","Heavy feeder: high N; Rain: high N loss risk"
+Barley,Grains & Cereals,Low Urea + DAP,Tillering,Low input crop
+Bajra (Pearl Millet),Grains & Cereals,Low NPK,Early growth,Dryland: low fertilizer
+Jowar (Sorghum),Grains & Cereals,Urea + DAP,Vegetative,Medium fertility
+Ragi,Grains & Cereals,NPK,Early + Ear formation,Poor soils need nutrient support
+Arhar (Tur),Pulses,DAP / SSP,Basal only,N-fixation active: avoid N; P improves nodules
+Chana (Gram),Pulses,DAP / SSP,Basal,Avoid Nitrogen; P-focused
+Moong,Pulses,SSP,Early,Short duration requirement
+Urad,Pulses,SSP,Early,Short duration requirement
+Masoor,Pulses,SSP,Basal,Low requirement
+Kidney Beans,Pulses,Light NPK,Early,Sensitive crop requirements
+Moth Beans,Pulses,Minimal,Basal,Dryland crop
+Potato,Vegetables,"High NPK, Potash","Early: N; Tuber formation: K","Loose soil needed; Heavy feeder"
+Tomato,Vegetables,"NPK, Calcium nitrate","Vegetative: N; Flowering/Fruit: K","Calcium prevents blossom rot"
+Onion,Vegetables,NPK + Sulfur,Bulb: Potassium,Sulfur improves quality/taste
+Brinjal,Vegetables,NPK,Continuous,Long duration crop
+Cabbage,Vegetables,High Nitrogen,Leaf growth,Fast-growing crop
+Cauliflower,Vegetables,High Nitrogen,Leaf growth,Fast-growing crop
+Spinach,Vegetables,High Nitrogen,Leaf growth,Fast-growing crop
+Okra,Vegetables,NPK,Vegetative,Balanced feeding
+Carrot,Vegetables,Low Nitrogen + Potassium,Root growth,Avoid forked roots
+Radish,Vegetables,Low Nitrogen + Potassium,Root growth,Avoid forked roots
+Capsicum,Vegetables,NPK + Potash,Fruiting,Sensitive crop
+Chili,Vegetables,NPK + Potash,Fruiting,Sensitive crop
+Pumpkin,Vegetables,NPK,Fruiting,Fast growth
+Bottle Gourd,Vegetables,NPK,Fruiting,Fast growth
+Bitter Gourd,Vegetables,NPK,Fruiting,Fast growth
+Cucumber,Vegetables,NPK,Growth,Moderate feeder
+Beans,Vegetables,NPK,Growth,Moderate feeder
+Garlic,Vegetables,NPK,Bulb,Moderate feeder
+Mango,Fruits,NPK + Urea,Fruiting: Potassium,Annual tree feeding
+Banana,Fruits,High NPK,Continuous,Heavy feeder
+Apple,Fruits,NPK,Fruiting,Seasonal requirement
+Citrus,Fruits,NPK,Regular,Balanced feeding
+Guava,Fruits,NPK,Regular,Balanced feeding
+Papaya,Fruits,NPK,Growth + Fruit,Balanced feeding
+Grapes,Fruits,NPK,Growth + Fruit,Balanced feeding
+Pomegranate,Fruits,NPK,Growth + Fruit,Balanced feeding
+Watermelon,Fruits,NPK,Fruiting,Fast growth
+Muskmelon,Fruits,NPK,Fruiting,Fast growth
+Coconut,Fruits,NPK,Continuous,Long-term basin application
+Sugarcane,Cash Crops,High Urea + NPK,Growth,Very heavy feeder
+Coffee,Cash Crops,NPK,Regular,Plantation crop
+Tea,Cash Crops,NPK,Regular,Plantation crop
+Cotton,Fiber,NPK,Boll formation,Heavy feeder
+Jute,Fiber,High Nitrogen,Vegetative,Fast growth
+Sunflower,Oilseeds,NPK + Sulfur,Flowering,Oil quality depends on Sulfur
+Groundnut,Oilseeds,NPK + Sulfur,Flowering,Oil quality depends on Sulfur
+Mustard,Oilseeds,NPK + Sulfur,Flowering,Oil quality depends on Sulfur
+Flowers,Ornamental,NPK + Potash,Flowering,Color and quality focus
+Nursery,Seeds,Very low NPK,Germination,Overfeeding risk

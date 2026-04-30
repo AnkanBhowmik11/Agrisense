@@ -1,0 +1,38 @@
+Category,Crop,Common_Fertilizers,Compost_Organic,Soil_Logic,Weather_Trigger,Crop_Stage_Logic,Others
+Grains & Cereals,rice,"Urea, DAP, MOP","FYM, Green manure, Vermicompost","Clay soil -> split nitrogen doses; Sandy soil -> more organic matter","Heavy rain -> avoid single heavy dose; Humid -> reduce nitrogen excess","Tillering -> Nitrogen high; Panicle formation -> Potassium",Standing water needs controlled application
+Grains & Cereals,wheat,"Urea, DAP, MOP","FYM, Vermicompost","Sandy -> more compost; Loamy -> balanced NPK","Cool season -> nitrogen effective; Rain -> split doses","Crown root stage -> nitrogen; Grain filling -> potassium",Late sowing needs higher nitrogen
+Grains & Cereals,maize (corn),"Urea, DAP, NPK (20:20:20)","FYM, Vermicompost","Sandy -> frequent nitrogen; Poor soil -> add compost","Rain -> nitrogen loss high; Dry -> better uptake","Early growth -> nitrogen; Cob formation -> potassium",Heavy feeder crop
+Grains & Cereals,barley,"Urea, DAP",FYM,Light soil -> compost,Cool -> good uptake,Tillering -> nitrogen,Low fertilizer requirement
+Grains & Cereals,bajra,Low NPK,FYM,Dry soil -> organic matter,Hot -> low fertilizer efficiency,Early growth -> nitrogen,Drought tolerant
+Grains & Cereals,jowar,"Urea, DAP",FYM,Medium fertility enough,Warm,Vegetative -> nitrogen,Moderate feeder
+Grains & Cereals,ragi,NPK,FYM,Poor soil -> compost needed,Humid,Early growth,Low input crop
+Pulses,arhar/tur,"DAP, SSP","FYM, Rhizobium inoculation !!",Low nitrogen soil -> Rhizobium,Dry -> good nodulation,Early -> phosphorus,Fixes own nitrogen
+Pulses,gram/chana,"DAP, SSP","FYM, Rhizobium",Low N needed,Cool,Root growth,Avoid excess nitrogen
+Pulses,moong,SSP,FYM,Light soil -> compost,Warm,Early,Short duration
+Pulses,urad,SSP,FYM,Medium fertility,Warm humid,Early,Nitrogen fixing
+Pulses,masoor,SSP,FYM,Light soil,Cool,Early,Low requirement
+Pulses,kidneybeans,NPK low dose,FYM,Rich soil needed,Cool,Early,Sensitive crop
+Pulses,mothbeans,Minimal,FYM,Dry soil,Hot,Early,Very low input
+Vegetables,potato,"NPK high, Potash","FYM, Vermicompost",Loose soil,Cool,Tuber -> potassium,Heavy feeder
+Vegetables,tomato,"NPK, Calcium nitrate",Vermicompost !!,Well-drained,Warm,Fruiting -> potassium,Needs balanced nutrients
+Vegetables,onion,"NPK, Sulfur",FYM,Light soil,Dry,Bulb -> potassium,Sulfur important
+Vegetables,brinjal (eggplant),NPK,Vermicompost,Rich soil,Warm,Fruiting,Continuous feeding
+Vegetables,cabbage / cauliflower / spinach,Nitrogen high,Vermicompost,Rich soil,Cool,Leaf growth,Fast growth
+Vegetables,okra (ladyfinger),NPK,FYM,Medium,Warm,Vegetative,Balanced feeding
+Vegetables,chili,"NPK, Potash",Vermicompost,Well-drained,Warm,Fruiting,Sensitive crop
+Vegetables,gourds,NPK,FYM,Sandy loam,Warm humid,Fruiting,Fast growth
+Vegetables,cucumber / beans / garlic,NPK,FYM,Well-drained,Warm,Vegetative,Moderate feeder
+Vegetables,leafy greens,Nitrogen high,Vermicompost !!,Rich soil,Cool,Leaf,Quick harvest
+Fruits,mango,NPK + Urea,FYM !!,Deep soil,Seasonal,Fruiting -> potassium,Annual feeding
+Fruits,banana,High NPK,FYM,Moist,Humid,Growth,Heavy feeder
+Fruits,apple,NPK,FYM,Well-drained,Cool,Fruiting,Region-specific
+Fruits,orange,NPK,FYM,Slightly acidic,Warm,Fruiting,Regular feeding
+Fruits,mixed fruits,Balanced NPK,FYM,Medium,Warm,Growth,Moderate
+Cash Crops,sugarcane,"High Urea, NPK",Press mud,Rich,Warm,Growth,Heavy feeder
+Cash Crops,coffee,"NPK",Organic mulch,Acidic,Humid,Leaf,Plantation crop
+Cash Crops,spices,NPK,Organic compost,Loose,Humid,Root,Sensitive
+Fiber & Oil,cotton,NPK,FYM,Black soil,Warm,Boll,Heavy feeder
+Fiber & Oil,jute,Nitrogen high,FYM,Alluvial,Humid,Vegetative,Fast growth
+Fiber & Oil,oilseed,NPK + Sulfur,FYM,Light,Cool,Flowering,Oil quality depends
+Flowers,all flowers,NPK + Potash,Vermicompost !!,Rich,Moderate,Flowering,Quality dependent
+Seeds / Nursery,all seeds,Very low NPK,"Vermicompost + cocopeat !!","Fine, loose",Controlled,Germination,Overfeeding kills plants

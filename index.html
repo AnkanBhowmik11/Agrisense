@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agri Sense</title>
+    <script>
+      // Agri Sense v2.0.0 - Forensic Polyfills
+      window.global = window;
+      window.process = { env: { DEBUG: undefined }, nextTick: (cb) => setTimeout(cb, 0) };
+      // Buffer Polyfill for MQTT.js
+      // window.Buffer = window.Buffer || require('buffer').Buffer; 
+    </script>
+    <!-- Fallback if require fails -->
+    <script src="https://bundle.run/buffer@6.0.3"></script>
+    <script>
+      if (!window.Buffer) window.Buffer = buffer.Buffer;
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
