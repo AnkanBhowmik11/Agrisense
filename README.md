@@ -6,10 +6,10 @@
 5. Integrated the Capacitor Media plugin to natively save captured photos to the Android phone gallery.
 
 ## Files Changed:
-- `firmware/02_CameraNode/CameraNode_ESP32CAM.ino`
-- `src/pages/Monitoring/VisualMonitor.jsx`
-- `android/app/src/main/AndroidManifest.xml`
-- `package.json` (Installed @capacitor-community/media)
+1. \`firmware/02_CameraNode/CameraNode_ESP32CAM.ino\`
+2. \`src/pages/Monitoring/VisualMonitor.jsx\`
+3. \`android/app/src/main/AndroidManifest.xml\`
+4. \`package.json\` (Installed @capacitor-community/media)
 
 ---
 
@@ -188,7 +188,8 @@ void setup() {
 
 void loop() {
   delay(1000);  // Camera server runs on its own FreeRTOS task
-}```
+}
+```
 
 ### 2. `src/pages/Monitoring/VisualMonitor.jsx`
 ```jsx
