@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../../state/AppContext';
 import { 
@@ -76,16 +76,40 @@ const Alerts = () => {
   const { sensorData, systemOverview } = useApp();
   const [filter, setFilter] = useState('all');
   const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
+  const [aiNotifs, setAiNotifs] = useState([]);
+
+  useEffect(() => {
+    const fetchAiNotifs = () => {
+      try {
+        const saved = localStorage.getItem('agrisense_ai_notifications');
+        if (saved) setAiNotifs(JSON.parse(saved).filter(n => Date.now() - n.timestamp < 24 * 60 * 60 * 1000));
+      } catch(e) {}
+    };
+    fetchAiNotifs();
+    const interval = setInterval(fetchAiNotifs, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const generatedAlerts = useMemo(() => {
-    if (!sensorData) return [];
     const alerts = [];
 
-    const addAlert = (id, title, message, type) => {
+    const addAlert = (id, title, message, type, time = 'Live Stream') => {
       if (!dismissedAlerts.has(id)) {
-        alerts.push({ id, title, message, type, time: 'Live Stream' });
+        alerts.push({ id, title, message, type, time });
       }
     };
+
+    aiNotifs.forEach(n => {
+      addAlert(
+        n.id.toString(), 
+        n.headline, 
+        n.desc, 
+        n.type === 'CRITICAL' ? 'critical' : 'warning', 
+        new Date(n.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      );
+    });
+
+    if (!sensorData) return alerts;
 
     // 1. Soil Node
     if (sensorData.soil?.moisture !== null) {
@@ -119,7 +143,7 @@ const Alerts = () => {
     if (alerts.length === 0 && systemOverview?.offline_nodes === 4) addAlert('blackout', 'Total Blackout', 'System is completely disconnected from field hardware.', 'critical');
 
     return alerts;
-  }, [sensorData, systemOverview, dismissedAlerts]);
+  }, [sensorData, systemOverview, dismissedAlerts, aiNotifs]);
 
   const filteredAlerts = useMemo(() => {
     if (filter === 'all') return generatedAlerts;

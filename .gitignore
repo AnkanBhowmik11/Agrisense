@@ -41,3 +41,14 @@ local.properties
 .env
 .env.local
 .env.*.local
+
+# Large binary / SDK files — too big for GitHub
+*.zip
+*.pt
+*.onnx
+*.pb
+*.h5
+*.weights
+jdk21.zip
+yolov8n.pt
+install_sdk.ps1

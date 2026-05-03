@@ -12,13 +12,13 @@ export const MASTER_CONFIG = {
   PROJECT_NAME: "innovatex",
   FARM_NAME: "semicolon",
   TAGLINE: "For Better Farming",
-  FOOTER_CREDIT: "by Prolayjit Biswas",
+  FOOTER_CREDIT: "by Team Semicolon",
   VERSION: "2.9.0",
   
   // 🔐 AUTHORIZED INVESTIGATORS
   AUTHORIZED_USERS: [
     { email: "farmer@test.com", password: "PASSWORD_HERE", name: "Lead Farmer" },
-    { email: "prolayjitbiswas14112004@gmail.com", password: "PASSWORD_HERE", name: "Prolayjit Biswas" },
+    { email: "prolayjitbiswas14112004@gmail.com", password: "PASSWORD_HERE", name: "Team Semicolon" },
     { email: "ankaanbhowmik11@gmail.com", password: "PASSWORD_HERE", name: "Ankan Bhowmik" },
     { email: "bubun15072006@gmail.com", password: "PASSWORD_HERE", name: "Arghya Roy" }
   ],
@@ -40,6 +40,7 @@ export const MASTER_CONFIG = {
   
   // 🗺️ MAP & WEATHER (Optional External APIs)
   OPENWEATHER_API_KEY: import.meta.env.VITE_WEATHER_API_KEY || "YOUR_OPENWEATHER_API_KEY", 
+  GROQ_API_KEY: import.meta.env.VITE_GROQ_API_KEY || "YOUR_GROQ_API_KEY",
   WEATHER_CITY: "Kalyani",
   
   MAP_LAT: 22.975,

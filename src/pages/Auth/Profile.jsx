@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { auth, updatePassword } from '../../firebase';
 import { useApp } from '../../state/AppContext';
 import { 
   User, Shield, CheckCircle2, 
@@ -7,7 +9,8 @@ import {
   Settings2, Heart, AlertCircle, Phone,
   Terminal, ChevronRight, Zap, Power,
   RefreshCw, Droplets, Network, Activity,
-  Camera, MapPin
+  Camera, MapPin, LogOut, Lock,
+  Trash2, X, Plus
 } from 'lucide-react';
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────
@@ -66,8 +69,12 @@ const Profile = () => {
   const { 
     user, updateUser, logout,
     isDarkMode, toggleTheme, farmHealthScore,
-    profileMeta, updateProfileMeta, farmInfo
+    profileMeta, updateProfileMeta, farmInfo,
+    fields, updateField, deleteField,
+    language, changeLanguage, t
   } = useApp();
+  
+  const navigate = useNavigate();
   
   const [formData, setFormData] = useState({ 
     name: user?.name || '',
@@ -79,10 +86,62 @@ const Profile = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  
+  const [editingFieldId, setEditingFieldId] = useState(null);
+  const [editFieldData, setEditFieldData] = useState({ name: '', crop: '' });
 
-  const handleSave = () => {
+  const handleSave = async () => {
     updateUser(formData);
-    alert("Profile Saved Successfully!");
+    
+    if (newPassword.trim().length > 5) {
+      try {
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          await updatePassword(currentUser, newPassword);
+          alert("Profile & Password Saved Successfully!");
+          setNewPassword('');
+          setShowPasswordModal(false);
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Profile saved! However, we couldn't update your password because it's been a while since you logged in. Please log out, log back in, and try changing your password again.");
+      }
+    } else if (newPassword.trim().length > 0) {
+      alert("Password must be at least 6 characters long.");
+      return; // prevent closing if invalid
+    } else {
+      alert("Profile Saved Successfully!");
+    }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (newPassword.trim().length > 5) {
+      try {
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          await updatePassword(currentUser, newPassword);
+          alert("Password Saved Successfully!");
+          setNewPassword('');
+          setShowPasswordModal(false);
+        } else {
+          alert("No authenticated user found.");
+        }
+      } catch (error) {
+        console.error(error);
+        alert("We couldn't update your password because it's been a while since you logged in. Please log out, log back in, and try changing your password again.");
+      }
+    } else {
+      alert("Password must be at least 6 characters long.");
+    }
+  };
+
+  const saveFieldEdit = () => {
+    if (editingFieldId && editFieldData.name.trim() !== '') {
+      updateField(editingFieldId, editFieldData);
+      setEditingFieldId(null);
+    }
   };
 
   const handlePhotoUpload = (e) => {
@@ -262,6 +321,22 @@ const Profile = () => {
               </div>
             </div>
 
+            <div>
+              <label style={{ fontSize: '0.6rem', fontWeight: 800, color: COLORS.subtext, textTransform: 'uppercase', marginBottom: '6px', display: 'block' }}>App Language</label>
+              <select 
+                value={language}
+                onChange={(e) => changeLanguage(e.target.value)}
+                style={{ 
+                  width: '100%', padding: '10px 12px', borderRadius: '10px', 
+                  background: '#F8FAFC', border: `1px solid ${COLORS.border}`,
+                  fontSize: '0.85rem', fontWeight: 600, color: COLORS.text, outline: 'none', cursor: 'pointer'
+                }}
+              >
+                <option value="en">English</option>
+                <option value="bn">বাংলা (Bengali)</option>
+              </select>
+            </div>
+
             <button 
               onClick={handleSave}
               style={{ width: '100%', padding: '14px', borderRadius: '12px', background: COLORS.primary, color: 'white', border: 'none', fontWeight: 800, fontSize: '0.9rem', marginTop: '8px', cursor: 'pointer', boxShadow: `0 4px 12px ${COLORS.primary}30` }}
@@ -271,12 +346,149 @@ const Profile = () => {
           </div>
         </ControlCard>
 
+        {/* 3. SECURITY FIELDS */}
+        <SectionHeader title="Security" icon={Shield} />
+        <ControlCard>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <label style={{ fontSize: '0.6rem', fontWeight: 800, color: COLORS.subtext, textTransform: 'uppercase', display: 'block' }}>Password</label>
+                <p style={{ fontSize: '0.75rem', fontWeight: 600, color: COLORS.text, margin: '2px 0 0 0' }}>••••••••</p>
+              </div>
+              <span 
+                onClick={() => setShowPasswordModal(true)}
+                style={{ fontSize: '0.75rem', fontWeight: 800, color: COLORS.secondary, cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Change Password
+              </span>
+            </div>
+          </div>
+        </ControlCard>
+
+        {/* 4. MANAGE FIELDS */}
+        <SectionHeader title={`Manage Fields (${fields?.length || 0})`} icon={MapPin} />
+        <ControlCard>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {fields?.map(field => (
+              <div key={field.id} style={{ padding: '10px', borderRadius: '10px', background: '#F8FAFC', border: `1px solid ${COLORS.border}` }}>
+                {editingFieldId === field.id ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <input 
+                      type="text" value={editFieldData.name} 
+                      onChange={e => setEditFieldData({ ...editFieldData, name: e.target.value })}
+                      placeholder="Field Name"
+                      style={{ padding: '8px', borderRadius: '8px', border: `1px solid ${COLORS.border}`, fontSize: '0.8rem', outline: 'none' }}
+                    />
+                    <input 
+                      type="text" value={editFieldData.crop} 
+                      onChange={e => setEditFieldData({ ...editFieldData, crop: e.target.value })}
+                      placeholder="Crop Type"
+                      style={{ padding: '8px', borderRadius: '8px', border: `1px solid ${COLORS.border}`, fontSize: '0.8rem', outline: 'none' }}
+                    />
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                      <button onClick={saveFieldEdit} style={{ flex: 1, padding: '6px', borderRadius: '6px', background: COLORS.primary, color: 'white', border: 'none', fontWeight: 700, fontSize: '0.7rem', cursor: 'pointer' }}>Save</button>
+                      <button onClick={() => setEditingFieldId(null)} style={{ flex: 1, padding: '6px', borderRadius: '6px', background: '#E2E8F0', color: COLORS.text, border: 'none', fontWeight: 700, fontSize: '0.7rem', cursor: 'pointer' }}>Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 800, color: COLORS.text }}>{field.name}</div>
+                      <div style={{ fontSize: '0.7rem', color: COLORS.subtext, fontWeight: 600 }}>{field.crop || 'No crop set'}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button 
+                        onClick={() => { setEditingFieldId(field.id); setEditFieldData({ name: field.name, crop: field.crop || '' }); }}
+                        style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'white', border: `1px solid ${COLORS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                      >
+                        <Edit3 size={14} color={COLORS.secondary} />
+                      </button>
+                      <button 
+                        onClick={() => { if(window.confirm('Delete this field?')) deleteField(field.id); }}
+                        style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'white', border: `1px solid ${COLORS.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                      >
+                        <Trash2 size={14} color={COLORS.danger} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            {fields?.length === 0 && (
+              <p style={{ fontSize: '0.75rem', color: COLORS.subtext, textAlign: 'center', margin: '10px 0' }}>No fields added yet.</p>
+            )}
+          </div>
+        </ControlCard>
+
+        {/* LOGOUT BUTTON */}
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            if (window.confirm("Are you sure you want to log out?")) {
+              logout();
+              navigate('/login');
+            }
+          }}
+          style={{
+            width: '100%', padding: '14px', borderRadius: '14px', 
+            background: 'white', border: `1px solid ${COLORS.danger}40`, 
+            color: COLORS.danger, fontWeight: 800, fontSize: '0.9rem', 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+            cursor: 'pointer', marginTop: '8px'
+          }}
+        >
+          <LogOut size={18} />
+          LOG OUT
+        </motion.button>
+
         {/* VERSION */}
         <div style={{ textAlign: 'center', opacity: 0.2, marginTop: '20px' }}>
           <p style={{ fontSize: '0.6rem', fontWeight: 800, letterSpacing: '0.1em' }}>AGRISENSE v{farmInfo?.version || "2.8.0"}</p>
         </div>
 
       </div>
+
+      {/* PASSWORD MODAL */}
+      <AnimatePresence>
+        {showPasswordModal && (
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+          >
+            <motion.div 
+              initial={{ scale: 0.95, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 20 }}
+              style={{ background: 'white', borderRadius: '24px', padding: '24px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: COLORS.text }}>Change Password</h3>
+                <button onClick={() => setShowPasswordModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                  <X size={20} color={COLORS.subtext} />
+                </button>
+              </div>
+              <div style={{ position: 'relative', marginBottom: '20px' }}>
+                <Lock size={16} color={COLORS.subtext} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+                <input 
+                  type="password" 
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password (min 6 chars)"
+                  style={{ 
+                    width: '100%', padding: '12px 12px 12px 36px', borderRadius: '12px', 
+                    background: '#F8FAFC', border: `1px solid ${COLORS.border}`,
+                    fontSize: '0.9rem', fontWeight: 600, color: COLORS.text, outline: 'none'
+                  }}
+                />
+              </div>
+              <button 
+                onClick={handleUpdatePassword}
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', background: COLORS.primary, color: 'white', border: 'none', fontWeight: 800, fontSize: '0.9rem', cursor: 'pointer', boxShadow: `0 4px 12px ${COLORS.primary}30` }}
+              >
+                UPDATE PASSWORD
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style>{`
         .no-scrollbar::-webkit-scrollbar { display: none; }

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AgriSense Network Security Config
+  Allows cleartext HTTP to local-network IPs so the ESP32-CAM stream works
+  even when the AgriSense_IoT AP has no internet connection.
+  Android blocks http:// to non-internet networks by default — this overrides that.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- ESP32-CAM AP subnet (192.168.4.x) -->
+        <domain includeSubdomains="true">192.168.4.1</domain>
+        <domain includeSubdomains="true">192.168.4.2</domain>
+        <domain includeSubdomains="true">192.168.4.3</domain>
+        <domain includeSubdomains="true">192.168.4.4</domain>
+        <!-- Common PC hotspot / router LAN ranges for the YOLO backend -->
+        <domain includeSubdomains="true">192.168.1.1</domain>
+        <domain includeSubdomains="true">192.168.1.100</domain>
+        <domain includeSubdomains="true">192.168.43.1</domain>
+        <domain includeSubdomains="true">10.0.0.1</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

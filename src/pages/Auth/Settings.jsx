@@ -136,7 +136,7 @@ const Settings = () => {
           </div>
           <div>
             <p style={{ fontSize: '0.55rem', fontWeight: 800, opacity: 0.5, textTransform: 'uppercase', margin: 0, letterSpacing: '0.1em' }}>Platform Architect</p>
-            <h4 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>Prolayjit Biswas</h4>
+            <h4 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>Team Semicolon</h4>
           </div>
         </div>
         <div style={{ paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

@@ -51,10 +51,10 @@ const BottomNav = () => {
 
   const tabs = [
     { id: 'Home', path: '/dashboard', icon: LayoutGrid },
-    { id: 'Soil Test', path: '/precision-soil-testing', icon: FlaskConical },
-    { id: 'Advisor', path: '/crop-advisor', icon: Sparkles },
+    { id: 'Control', path: '/device-area', icon: Cpu },
+    { id: 'Advisor', path: '/crop-advisor', icon: Sparkles, isFab: true },
     { id: 'Analytics', path: '/analytics', icon: LineChart },
-    { id: 'Devices', path: '/device-area', icon: Cpu },
+    { id: 'Soil Test', path: '/precision-soil-testing', icon: FlaskConical },
   ];
 
   return (
@@ -67,6 +67,30 @@ const BottomNav = () => {
       {tabs.map((item) => {
         const Icon = item.icon;
         const isActive = location.pathname === item.path;
+        if (item.isFab) {
+          return (
+            <motion.button
+              key={item.path}
+              whileTap={{ scale: 0.88 }}
+              onClick={() => navigate(item.path)}
+              style={{
+                width: '62px', height: '62px', borderRadius: '50%',
+                background: isActive
+                  ? 'linear-gradient(135deg, #10B981, #059669)'
+                  : 'linear-gradient(160deg, #064E3B 0%, #022C22 100%)',
+                border: 'none', display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center', gap: '2px',
+                cursor: 'pointer', marginBottom: '30px', flexShrink: 0,
+                boxShadow: isActive
+                  ? '0 8px 28px rgba(16,185,129,0.55)'
+                  : '0 8px 24px rgba(2,44,34,0.45)',
+              }}
+            >
+              <Icon size={22} color="white" strokeWidth={2.2} />
+              <span style={{ fontSize: '0.42rem', fontWeight: 900, color: 'white', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{item.id}</span>
+            </motion.button>
+          );
+        }
         return (
           <motion.button
             key={item.path} whileTap={{ scale: 0.9 }}
@@ -101,7 +125,7 @@ const MainLayout = ({ children }) => {
     '/weather':                'Weather Station',
     '/soil-monitoring':        'Soil Monitor',
     '/storage-hub':            'Storage Hub',
-    '/device-area':            'Device Network',
+    '/device-area':            'Control Center',
     '/camera':                 'Field Vision',
     '/alerts':                 'Alert Center',
     '/profile':                'My Profile',

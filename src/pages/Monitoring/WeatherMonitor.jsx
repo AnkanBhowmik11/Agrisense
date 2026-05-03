@@ -110,7 +110,7 @@ const RegionalMetric = ({ label, value, icon: Icon, color }) => (
 
 const WeatherMonitoring = () => {
   const navigate = useNavigate();
-  const { sensorData, apiWeather, apiForecast, systemHealth, lastGlobalUpdate, devices } = useApp();
+  const { sensorData, apiWeather, apiForecast, globalWeatherAlert, systemHealth, lastGlobalUpdate, devices, t } = useApp();
 
   const weather = sensorData?.weather || {};
   const weatherScore = systemHealth.weather || 0;
@@ -128,12 +128,12 @@ const WeatherMonitoring = () => {
   const isOnline = devices?.['weather_node']?.status === 'ACTIVE' || stats.temp !== null;
 
   const heroConfig = useMemo(() => {
-    if (!isOnline) return { label: 'DEVICE OFFLINE', status: 'Offline', gradient: GRADIENTS.offline, iconColor: COLORS.offline, message: 'Check node power and connectivity.', bg: '#F1F5F9', border: '#E2E8F0' };
+    if (!isOnline) return { label: t('device_offline') || 'DEVICE OFFLINE', status: t('offline'), gradient: GRADIENTS.offline, iconColor: COLORS.offline, message: 'Check node power and connectivity.', bg: '#F1F5F9', border: '#E2E8F0' };
     
-    if (weatherScore >= 75) return { label: 'CLIMATE STABILITY', status: 'Optimal', gradient: GRADIENTS.optimal, iconColor: COLORS.primary, message: 'Current conditions support peak crop respiration.', bg: '#F0FDF4', border: 'rgba(20, 184, 166, 0.1)' };
-    if (weatherScore >= 45) return { label: 'CLIMATE STABILITY', status: 'Moderate', gradient: GRADIENTS.moderate, iconColor: COLORS.warning, message: 'Sub-optimal climate detected. Monitor heat stress.', bg: '#FFFBEB', border: 'rgba(245, 158, 11, 0.1)' };
-    return { label: 'CLIMATE STABILITY', status: 'Critical', gradient: GRADIENTS.critical, iconColor: COLORS.critical, message: 'Extreme weather threshold breached.', bg: '#FEF2F2', border: 'rgba(239, 68, 68, 0.1)' };
-  }, [isOnline, weatherScore]);
+    if (weatherScore >= 75) return { label: t('climate_stability') || 'CLIMATE STABILITY', status: t('optimal'), gradient: GRADIENTS.optimal, iconColor: COLORS.primary, message: 'Current conditions support peak crop respiration.', bg: '#F0FDF4', border: 'rgba(20, 184, 166, 0.1)' };
+    if (weatherScore >= 45) return { label: t('climate_stability') || 'CLIMATE STABILITY', status: t('moderate'), gradient: GRADIENTS.moderate, iconColor: COLORS.warning, message: 'Sub-optimal climate detected. Monitor heat stress.', bg: '#FFFBEB', border: 'rgba(245, 158, 11, 0.1)' };
+    return { label: t('climate_stability') || 'CLIMATE STABILITY', status: t('critical'), gradient: GRADIENTS.critical, iconColor: COLORS.critical, message: 'Extreme weather threshold breached.', bg: '#FEF2F2', border: 'rgba(239, 68, 68, 0.1)' };
+  }, [isOnline, weatherScore, t]);
 
   return (
     <div style={{ padding: '1.25rem', paddingBottom: '10px', background: COLORS.bg, minHeight: 'auto', fontFamily: "'Outfit', sans-serif" }}>
@@ -203,26 +203,46 @@ const WeatherMonitoring = () => {
         />
       </div>
 
+      {/* ─── ALERTS & WARNINGS ─── */}
+      {globalWeatherAlert && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          style={{
+            background: '#FEF2F2', border: '1px solid rgba(239, 68, 68, 0.2)',
+            borderRadius: '20px', padding: '1rem 1.25rem', marginBottom: '1.5rem',
+            display: 'flex', alignItems: 'center', gap: '12px'
+          }}
+        >
+          <div style={{ padding: '8px', background: '#EF4444', borderRadius: '50%' }}>
+            <Activity size={18} color="white" />
+          </div>
+          <div>
+            <h4 style={{ margin: 0, fontSize: '0.8rem', fontWeight: 800, color: '#B91C1C', textTransform: 'uppercase' }}>{t('severe_weather_warning')}</h4>
+            <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem', fontWeight: 600, color: '#991B1B' }}>{globalWeatherAlert}</p>
+          </div>
+        </motion.div>
+      )}
+
       {/* ─── REGIONAL & FORECAST ─── */}
       <section style={{ background: 'white', borderRadius: '28px', padding: '1.5rem', border: `1px solid ${COLORS.border}`, marginBottom: '1.5rem' }}>
         <h3 style={{ fontSize: '0.75rem', fontWeight: 800, color: COLORS.text, marginBottom: '1rem', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Navigation size={18} color={COLORS.primary} /> Regional Data
+          <Navigation size={18} color={COLORS.primary} /> {t('regional_data')}
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.75rem' }}>
-           <RegionalMetric label="AQI" value={apiWeather?.aqi || '--'} icon={Activity} color="#10B981" />
-           <RegionalMetric label="Clouds" value={apiWeather?.clouds ? `${apiWeather.clouds}%` : '--'} icon={CloudSun} color="#3B82F6" />
-           <RegionalMetric label="Wind" value={apiWeather?.windSpeed || '--'} icon={Wind} color="#F59E0B" />
-           <RegionalMetric label="Feels" value={`${apiWeather?.feelsLike || '--'}°`} icon={Thermometer} color="#EF4444" />
-           <RegionalMetric label="Press" value={apiWeather?.pressure || '--'} icon={Gauge} color="#8B5CF6" />
-           <RegionalMetric label="Visib" value={apiWeather?.visibility || '--'} icon={Eye} color="#10B981" />
-           <RegionalMetric label="Rise" value={apiWeather?.sunrise || '--'} icon={Sunrise} color={COLORS.primary} />
-           <RegionalMetric label="Set" value={apiWeather?.sunset || '--'} icon={Sunset} color={COLORS.secondary} />
+           <RegionalMetric label={t('temp')} value={apiWeather?.temp ? `${apiWeather.temp}°` : '--'} icon={Thermometer} color="#EF4444" />
+           <RegionalMetric label={t('clouds')} value={apiWeather?.clouds ? `${apiWeather.clouds}%` : '--'} icon={CloudSun} color="#3B82F6" />
+           <RegionalMetric label={t('wind')} value={apiWeather?.windSpeed || '--'} icon={Wind} color="#F59E0B" />
+           <RegionalMetric label={t('feels')} value={`${apiWeather?.feelsLike || '--'}°`} icon={Thermometer} color="#F97316" />
+           <RegionalMetric label={t('press')} value={apiWeather?.pressure || '--'} icon={Gauge} color="#8B5CF6" />
+           <RegionalMetric label={t('humid')} value={apiWeather?.humidity ? `${apiWeather.humidity}%` : '--'} icon={Droplet} color="#0EA5E9" />
+           <RegionalMetric label={t('rise')} value={apiWeather?.sunrise || '--'} icon={Sunrise} color={COLORS.primary} />
+           <RegionalMetric label={t('set')} value={apiWeather?.sunset || '--'} icon={Sunset} color={COLORS.secondary} />
         </div>
       </section>
 
       <section style={{ background: 'white', borderRadius: '32px', padding: '1.5rem', border: `1px solid ${COLORS.border}`, marginBottom: '1.5rem' }}>
         <h3 style={{ margin: '0 0 1rem 0', fontSize: '0.75rem', fontWeight: 800, color: COLORS.text, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <LineChart size={18} color={COLORS.primary} /> 5-Day Forecast
+          <LineChart size={18} color={COLORS.primary} /> {t('five_day_forecast')}
         </h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {(apiForecast || []).map((day, idx) => {

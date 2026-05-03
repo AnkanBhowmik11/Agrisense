@@ -79,4 +79,4 @@ agrisense/innovatex/semicolon/commands
 
 ---
 
-*AgriSense Pro v17.1.0 · by Prolayjit Biswas*
+*AgriSense Pro v17.1.0 · by Team Semicolon*

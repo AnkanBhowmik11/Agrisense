@@ -3,7 +3,7 @@
  * Organized Industrial State Engine for AgriSense Ecosystem.
  */
 
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useMemo } from 'react';
 
 // API & Infrastructure
 import mqttService from '../api/mqttService';
@@ -25,8 +25,51 @@ import {
   ACTUATORS 
 } from '../logic/healthEngine';
 import { processMqttMessage } from '../engines/sensorController';
+import { TRANSLATIONS } from './translations';
+
+import { auth, signOut, onAuthStateChanged, db, doc, setDoc, getDoc, updateDoc, deleteDoc, collection, getDocs } from '../firebase';
 
 const AppContext = createContext();
+
+const extractFieldTimestamp = (field) => {
+  if (typeof field?.createdAt === 'number') return field.createdAt;
+  const idMatch = String(field?.id || '').match(/^f_(\d+)$/);
+  return idMatch ? Number(idMatch[1]) : Number.MAX_SAFE_INTEGER;
+};
+
+const sortFieldsByCreation = (list = []) => (
+  [...list].sort((a, b) => extractFieldTimestamp(a) - extractFieldTimestamp(b))
+);
+
+const getDateKey = (ts = Date.now()) => {
+  const d = new Date(ts);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+const AGRISENSE_LS_KEYS = [
+  'agrisense_fields',
+  'agrisense_active_field',
+  'agrisense_selected_analytics_field',
+  'agrisense_analytics_snapshots',
+  'agrisense_analytics_reports',
+  'agrisense_history',
+  'agrisense_branding',
+  'agrisense_ai_notifications',
+];
+
+const lsKey = (uid, key) => uid ? `${key}_${uid}` : key;
+
+const clearAllUserData = () => {
+  AGRISENSE_LS_KEYS.forEach(k => {
+    // Remove both plain keys and any UID-scoped keys
+    Object.keys(localStorage)
+      .filter(lk => lk === k || lk.startsWith(k + '_'))
+      .forEach(lk => localStorage.removeItem(lk));
+  });
+};
 
 export const AppProvider = ({ children }) => {
   // ─── STATE DEFINITIONS ────────────────────────────────────────────────────
@@ -39,6 +82,76 @@ export const AppProvider = ({ children }) => {
       return null;
     }
   });
+
+  // Wipe stale localStorage when a different user logs in
+  const prevUidRef = useRef(null);
+  useEffect(() => {
+    const currentUid = user?.uid || null;
+    if (prevUidRef.current && prevUidRef.current !== currentUid) {
+      // Different user — wipe device-level non-scoped keys
+      clearAllUserData();
+    }
+    prevUidRef.current = currentUid;
+  }, [user?.uid]);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // Reload so displayName set by updateProfile is available (avoids race with signup)
+        try { await firebaseUser.reload(); } catch(_) {}
+        const freshUser = auth.currentUser || firebaseUser;
+
+        // If displayName is still null after reload, wait briefly and try once more
+        let displayName = freshUser.displayName;
+        if (!displayName) {
+          await new Promise(r => setTimeout(r, 800));
+          try { await (auth.currentUser || firebaseUser).reload(); } catch(_) {}
+          displayName = auth.currentUser?.displayName || null;
+        }
+
+        let userData = {
+          email: freshUser.email,
+          name: displayName || freshUser.email?.split('@')[0] || 'Farmer',
+          uid: freshUser.uid,
+          location: 'Field Zone A',
+          phone: freshUser.phoneNumber || '',
+          photo: freshUser.photoURL || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&q=80&w=200',
+          isGuest: false
+        };
+
+        try {
+          const userDocRef = doc(db, 'users', freshUser.uid);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            // Merge Firestore data — but preserve displayName if Firestore has stale 'Farmer'
+            const firestoreData = userDoc.data();
+            if (firestoreData.name === 'Farmer' && displayName) firestoreData.name = displayName;
+            userData = { ...userData, ...firestoreData };
+          } else {
+            // Brand new user — save with correct name
+            await setDoc(userDocRef, userData);
+          }
+        } catch (error) {
+          console.error("Firestore error:", error);
+        }
+
+        setUser(userData);
+        localStorage.setItem('agrisense_user', JSON.stringify(userData));
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const [language, setLanguage] = useState(() => {
+    return localStorage.getItem('agrisense_language') || 'en';
+  });
+
+  const changeLanguage = (lang) => {
+    setLanguage(lang);
+    localStorage.setItem('agrisense_language', lang);
+  };
+
+  const t = (key) => TRANSLATIONS[language]?.[key] || TRANSLATIONS['en']?.[key] || key;
 
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [sensorData, setSensorData] = useState(INITIAL_SENSOR_DATA);
@@ -58,6 +171,7 @@ export const AppProvider = ({ children }) => {
 
   const [apiWeather, setApiWeather] = useState(INITIAL_API_WEATHER);
   const [apiForecast, setApiForecast] = useState([]);
+  const [globalWeatherAlert, setGlobalWeatherAlert] = useState(null);
   const [mqttStatus, setMqttStatus] = useState('disconnected');
   const [connectivityStatus, setConnectivityStatus] = useState('Online');
   const [cloudSyncStatus, setCloudSyncStatus] = useState('Active');
@@ -72,6 +186,395 @@ export const AppProvider = ({ children }) => {
     [ACTUATORS.DISPLAY]: false,
     [ACTUATORS.LIGHT]:   false,
   });
+
+  // ─── FIELDS MANAGEMENT ───
+  const [fields, setFields] = useState(() => {
+    try {
+      const uid = (() => { try { return JSON.parse(localStorage.getItem('agrisense_user'))?.uid; } catch { return null; } })();
+      const saved = localStorage.getItem(lsKey(uid, 'agrisense_fields'));
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  
+  const [activeFieldId, setActiveFieldId] = useState(() => {
+    const uid = (() => { try { return JSON.parse(localStorage.getItem('agrisense_user'))?.uid; } catch { return null; } })();
+    return localStorage.getItem(lsKey(uid, 'agrisense_active_field')) || null;
+  });
+  const [selectedAnalyticsFieldId, setSelectedAnalyticsFieldId] = useState(() => (
+    (() => { const uid = (() => { try { return JSON.parse(localStorage.getItem('agrisense_user'))?.uid; } catch { return null; } })(); return localStorage.getItem(lsKey(uid, 'agrisense_selected_analytics_field')) || null; })()
+  ));
+  const [analyticsSnapshotsByField, setAnalyticsSnapshotsByField] = useState(() => {
+    try {
+      const uid = (() => { try { return JSON.parse(localStorage.getItem('agrisense_user'))?.uid; } catch { return null; } })();
+      const raw = localStorage.getItem(lsKey(uid, 'agrisense_analytics_snapshots'));
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  });
+  const [dailyAnalyticsReports, setDailyAnalyticsReports] = useState(() => {
+    try {
+      const uid = (() => { try { return JSON.parse(localStorage.getItem('agrisense_user'))?.uid; } catch { return null; } })();
+      const raw = localStorage.getItem(lsKey(uid, 'agrisense_analytics_reports'));
+      return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+  });
+  const lastSnapshotSlotRef = useRef(null);
+  const lastMidnightRunRef = useRef(null);
+
+  const activeField = useMemo(() => fields.find(f => f.id === activeFieldId), [fields, activeFieldId]);
+
+  useEffect(() => {
+    if (fields.length === 0) return;
+    const hasActive = fields.some(f => f.id === activeFieldId);
+    if (!hasActive) {
+      const firstFieldId = sortFieldsByCreation(fields)[0]?.id;
+      if (firstFieldId) {
+        setActiveFieldId(firstFieldId);
+        localStorage.setItem(lsKey(user?.uid, 'agrisense_active_field'), firstFieldId);
+      }
+    }
+  }, [fields, activeFieldId, user?.uid]);
+
+  useEffect(() => {
+    if (selectedAnalyticsFieldId) return;
+    if (!fields.length) return;
+    const firstFieldId = sortFieldsByCreation(fields)[0]?.id || null;
+    if (firstFieldId) {
+      setSelectedAnalyticsFieldId(firstFieldId);
+      localStorage.setItem(lsKey(user?.uid, 'agrisense_selected_analytics_field'), firstFieldId);
+    }
+  }, [fields, selectedAnalyticsFieldId, user?.uid]);
+
+  useEffect(() => {
+    const loadFieldsFromFirestore = async () => {
+      if (!user?.uid || user.isGuest) return;
+      try {
+        const snapshot = await getDocs(collection(db, 'users', user.uid, 'fields'));
+        const remoteFields = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (remoteFields.length === 0) return;
+
+        const sortedFields = sortFieldsByCreation(remoteFields);
+        setFields(sortedFields);
+        localStorage.setItem(lsKey(user.uid, 'agrisense_fields'), JSON.stringify(sortedFields));
+
+        const savedFieldId = localStorage.getItem(lsKey(user.uid, 'agrisense_active_field'));
+        const preferredId = sortedFields.some(f => f.id === savedFieldId)
+          ? savedFieldId
+          : sortedFields[0]?.id;
+        if (preferredId) {
+          setActiveFieldId(preferredId);
+          localStorage.setItem(lsKey(user.uid, 'agrisense_active_field'), preferredId);
+        }
+      } catch (e) {
+        console.error("Failed to load fields from Firestore", e);
+      }
+    };
+
+    loadFieldsFromFirestore();
+  }, [user?.uid, user?.isGuest]);
+
+  useEffect(() => {
+    localStorage.setItem(lsKey(user?.uid, 'agrisense_analytics_snapshots'), JSON.stringify(analyticsSnapshotsByField));
+  }, [analyticsSnapshotsByField, user?.uid]);
+
+  useEffect(() => {
+    localStorage.setItem(lsKey(user?.uid, 'agrisense_analytics_reports'), JSON.stringify(dailyAnalyticsReports));
+  }, [dailyAnalyticsReports, user?.uid]);
+
+  useEffect(() => {
+    if (!selectedAnalyticsFieldId) return;
+    localStorage.setItem(lsKey(user?.uid, 'agrisense_selected_analytics_field'), selectedAnalyticsFieldId);
+  }, [selectedAnalyticsFieldId, user?.uid]);
+
+  const addField = async (fieldData) => {
+    const newField = { ...fieldData, id: 'f_' + Date.now(), createdAt: Date.now() };
+    const newFields = [...fields, newField];
+    setFields(newFields);
+    setActiveFieldId(newField.id);
+    localStorage.setItem(lsKey(user?.uid, 'agrisense_fields'), JSON.stringify(newFields));
+    localStorage.setItem(lsKey(user?.uid, 'agrisense_active_field'), newField.id);
+
+    // Save to firestore if logged in
+    if (user?.uid && !user.isGuest) {
+      try {
+        await setDoc(doc(db, 'users', user.uid, 'fields', newField.id), newField);
+      } catch (e) { console.error("Failed to save field to Firestore", e); }
+    }
+  };
+
+  const updateField = async (id, updatedData) => {
+    const newFields = fields.map(f => f.id === id ? { ...f, ...updatedData } : f);
+    setFields(newFields);
+    localStorage.setItem(lsKey(user?.uid, 'agrisense_fields'), JSON.stringify(newFields));
+    if (user?.uid && !user.isGuest) {
+      try {
+        await updateDoc(doc(db, 'users', user.uid, 'fields', id), updatedData);
+      } catch (e) { console.error(e); }
+    }
+  };
+
+  const deleteField = async (id) => {
+    const newFields = fields.filter(f => f.id !== id);
+    setFields(newFields);
+    localStorage.setItem(lsKey(user?.uid, 'agrisense_fields'), JSON.stringify(newFields));
+    if (activeFieldId === id) {
+      const fallbackId = sortFieldsByCreation(newFields)[0]?.id || null;
+      setActiveFieldId(fallbackId);
+      if (fallbackId) localStorage.setItem(lsKey(user?.uid, 'agrisense_active_field'), fallbackId);
+      else localStorage.removeItem(lsKey(user?.uid, 'agrisense_active_field'));
+    }
+    if (user?.uid && !user.isGuest) {
+      try {
+        await deleteDoc(doc(db, 'users', user.uid, 'fields', id));
+      } catch (e) { console.error(e); }
+    }
+  };
+
+  const switchField = (id) => {
+    setActiveFieldId(id);
+    if (id) localStorage.setItem(lsKey(user?.uid, 'agrisense_active_field'), id);
+    else localStorage.removeItem(lsKey(user?.uid, 'agrisense_active_field'));
+  };
+
+  useEffect(() => {
+    const loadAnalyticsFromFirestore = async () => {
+      if (!user?.uid || user.isGuest) return;
+      try {
+        const [snapshotsSnap, reportsSnap] = await Promise.all([
+          getDocs(collection(db, 'users', user.uid, 'analyticsSnapshots')),
+          getDocs(collection(db, 'users', user.uid, 'analyticsReports')),
+        ]);
+
+        const snapshotMap = {};
+        snapshotsSnap.forEach((d) => {
+          const data = d.data() || {};
+          const { fieldId, date, entries = [] } = data;
+          if (!fieldId || !date) return;
+          if (!snapshotMap[fieldId]) snapshotMap[fieldId] = {};
+          snapshotMap[fieldId][date] = entries;
+        });
+        if (Object.keys(snapshotMap).length) setAnalyticsSnapshotsByField(snapshotMap);
+
+        const reportMap = {};
+        reportsSnap.forEach((d) => {
+          const data = d.data() || {};
+          const { fieldId, date, report } = data;
+          if (!fieldId || !date || !report) return;
+          if (!reportMap[fieldId]) reportMap[fieldId] = {};
+          reportMap[fieldId][date] = report;
+        });
+        if (Object.keys(reportMap).length) setDailyAnalyticsReports(reportMap);
+      } catch (e) {
+        console.error('Failed to load analytics from Firestore', e);
+      }
+    };
+
+    loadAnalyticsFromFirestore();
+  }, [user?.uid, user?.isGuest]);
+
+  useEffect(() => {
+    const captureSnapshot = async () => {
+      if (!activeFieldId || !activeField) return;
+      const now = Date.now();
+      const slot = Math.floor(now / (10 * 60 * 1000));
+      if (lastSnapshotSlotRef.current === slot) return;
+      lastSnapshotSlotRef.current = slot;
+
+      const dateKey = getDateKey(now);
+      const entry = {
+        timestamp: now,
+        soil: {
+          moisture: sensorData?.soil?.moisture ?? null,
+          ph: sensorData?.soil?.ph ?? null,
+          temp: sensorData?.soil?.temp ?? null,
+          n: sensorData?.soil?.npk?.n ?? null,
+          p: sensorData?.soil?.npk?.p ?? null,
+          k: sensorData?.soil?.npk?.k ?? null,
+        },
+        weather: {
+          temp: sensorData?.weather?.temp ?? null,
+          humidity: sensorData?.weather?.humidity ?? null,
+          lightIntensity: sensorData?.weather?.lightIntensity ?? null,
+          rainLevel: sensorData?.weather?.rainLevel ?? null,
+        },
+        storage: {
+          temp: sensorData?.storage?.temp ?? null,
+          humidity: sensorData?.storage?.humidity ?? null,
+          mq135: sensorData?.storage?.mq135 ?? null,
+        },
+      };
+
+      let updatedForFieldDate = [];
+      setAnalyticsSnapshotsByField((prev) => {
+        const byField = prev[activeFieldId] || {};
+        const dayEntries = byField[dateKey] || [];
+        const alreadyThisSlot = dayEntries.some((e) => Math.floor((e.timestamp || 0) / (10 * 60 * 1000)) === slot);
+        updatedForFieldDate = alreadyThisSlot ? dayEntries : [...dayEntries, entry];
+        return {
+          ...prev,
+          [activeFieldId]: {
+            ...byField,
+            [dateKey]: updatedForFieldDate,
+          },
+        };
+      });
+
+      if (user?.uid && !user.isGuest) {
+        try {
+          await setDoc(
+            doc(db, 'users', user.uid, 'analyticsSnapshots', `${activeFieldId}_${dateKey}`),
+            {
+              fieldId: activeFieldId,
+              fieldName: activeField?.name || '',
+              crop: activeField?.crop || '',
+              date: dateKey,
+              entries: updatedForFieldDate,
+              updatedAt: now,
+            },
+            { merge: true }
+          );
+        } catch (e) {
+          console.error('Failed to sync analytics snapshot', e);
+        }
+      }
+    };
+
+    captureSnapshot();
+    const timer = setInterval(captureSnapshot, 60 * 1000);
+    return () => clearInterval(timer);
+  }, [activeFieldId, activeField, sensorData, user?.uid, user?.isGuest]);
+
+  useEffect(() => {
+    const generateFiveLineReport = async (fieldId, fieldName, crop, dateKey, entries) => {
+      const avg = (arr) => {
+        const vals = arr.filter((v) => typeof v === 'number');
+        if (!vals.length) return null;
+        return vals.reduce((a, b) => a + b, 0) / vals.length;
+      };
+      const latest = entries[entries.length - 1] || {};
+      const stats = {
+        soilMoistureAvg: avg(entries.map((e) => e.soil?.moisture)),
+        soilPhAvg: avg(entries.map((e) => e.soil?.ph)),
+        weatherTempAvg: avg(entries.map((e) => e.weather?.temp)),
+        weatherHumidityAvg: avg(entries.map((e) => e.weather?.humidity)),
+        storageTempAvg: avg(entries.map((e) => e.storage?.temp)),
+      };
+
+      const key = MASTER_CONFIG.GROQ_API_KEY;
+      if (!key || key === 'YOUR_GROQ_API_KEY' || key.includes('VITE_')) {
+        return [
+          `Field ${fieldName} (${crop}) had ${entries.length} analytics snapshots on ${dateKey}.`,
+          `Avg soil moisture ${stats.soilMoistureAvg?.toFixed(1) ?? '--'}% and pH ${stats.soilPhAvg?.toFixed(2) ?? '--'}.`,
+          `Avg weather temp ${stats.weatherTempAvg?.toFixed(1) ?? '--'} C with humidity ${stats.weatherHumidityAvg?.toFixed(1) ?? '--'}%.`,
+          `Avg storage temp ${stats.storageTempAvg?.toFixed(1) ?? '--'} C; latest rain level ${latest.weather?.rainLevel ?? '--'}.`,
+          'Recommendation: review irrigation/storage settings if moisture and humidity drift from crop targets.',
+        ];
+      }
+
+      try {
+        const langInstruction = language === 'bn' ? "IMPORTANT: Provide the entire response in Bengali language. Ensure it reads naturally." : "";
+        const prompt = `You are an agriculture analytics assistant. Return exactly 5 concise lines, no numbering. ${langInstruction}
+Field: ${fieldName}
+Crop: ${crop}
+Date: ${dateKey}
+Snapshots: ${entries.length}
+Stats: ${JSON.stringify(stats)}
+Latest: ${JSON.stringify(latest)}`;
+        const resp = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${key}`,
+          },
+          body: JSON.stringify({
+            model: 'llama-3.1-8b-instant',
+            messages: [{ role: 'user', content: prompt }],
+            temperature: 0.2,
+          }),
+        });
+        if (!resp.ok) throw new Error(`Groq error ${resp.status}`);
+        const json = await resp.json();
+        const text = json?.choices?.[0]?.message?.content || '';
+        const lines = text.split('\n').map((l) => l.trim()).filter(Boolean).slice(0, 5);
+        if (lines.length === 5) return lines;
+      } catch (err) {
+        console.error('Groq analytics report failed', err);
+      }
+
+      return [
+        `Field ${fieldName} (${crop}) had ${entries.length} analytics snapshots on ${dateKey}.`,
+        `Average soil and weather trends stayed within expected operational range.`,
+        `Storage and climate metrics should be watched for abrupt late-night shifts.`,
+        `No major critical anomaly was detected in the sampled 10-minute windows.`,
+        'Action: continue monitoring and adjust irrigation/fan cycles if drift persists.',
+      ];
+    };
+
+    const runMidnightReports = async () => {
+      const now = new Date();
+      if (!(now.getHours() === 0 && now.getMinutes() < 5)) return;
+      const runKey = getDateKey(now.getTime());
+      if (lastMidnightRunRef.current === runKey) return;
+      lastMidnightRunRef.current = runKey;
+
+      const targetDate = getDateKey(now.getTime() - 24 * 60 * 60 * 1000);
+      const fieldsToProcess = sortFieldsByCreation(fields);
+      for (const field of fieldsToProcess) {
+        const entries = analyticsSnapshotsByField?.[field.id]?.[targetDate] || [];
+        if (!entries.length) continue;
+        if (dailyAnalyticsReports?.[field.id]?.[targetDate]) continue;
+
+        const lines = await generateFiveLineReport(field.id, field.name, field.crop, targetDate, entries);
+        const report = {
+          fieldId: field.id,
+          fieldName: field.name,
+          crop: field.crop || '',
+          date: targetDate,
+          lines,
+          entries: entries, // Archive full 24h data
+          generatedAt: Date.now(),
+          snapshotCount: entries.length,
+        };
+
+        setDailyAnalyticsReports((prev) => ({
+          ...prev,
+          [field.id]: {
+            ...(prev[field.id] || {}),
+            [targetDate]: report,
+          },
+        }));
+
+        // Delete old day's snapshots so the new day starts fresh
+        setAnalyticsSnapshotsByField((prev) => {
+          const newFieldData = { ...(prev[field.id] || {}) };
+          delete newFieldData[targetDate];
+          return { ...prev, [field.id]: newFieldData };
+        });
+
+        if (user?.uid && !user.isGuest) {
+          try {
+            await setDoc(
+              doc(db, 'users', user.uid, 'analyticsReports', `${field.id}_${targetDate}`),
+              {
+                fieldId: field.id,
+                fieldName: field.name,
+                crop: field.crop || '',
+                date: targetDate,
+                report,
+                updatedAt: Date.now(),
+              },
+              { merge: true }
+            );
+          } catch (e) {
+            console.error('Failed to store analytics report', e);
+          }
+        }
+      }
+    };
+
+    runMidnightReports();
+    const timer = setInterval(runMidnightReports, 60 * 1000);
+    return () => clearInterval(timer);
+  }, [fields, analyticsSnapshotsByField, dailyAnalyticsReports, user?.uid, user?.isGuest]);
 
   const [farmInfo, setFarmInfo] = useState(() => {
     try {
@@ -120,18 +623,24 @@ export const AppProvider = ({ children }) => {
   };
 
   const updateProfileMeta = (newData) => setProfileMeta(prev => ({ ...prev, ...newData }));
-  const updateUser = (newUserData) => {
+  const updateUser = async (newUserData) => {
     const updated = { ...user, ...newUserData, isGuest: false };
     setUser(updated);
     localStorage.setItem('agrisense_user', JSON.stringify(updated));
+
+    if (updated.uid && !updated.isGuest) {
+      try {
+        await setDoc(doc(db, 'users', updated.uid), newUserData, { merge: true });
+      } catch (error) {
+        console.error("Failed to save profile to Firestore:", error);
+      }
+    }
   };
 
   const login = (id, pass) => {
-    const matchedUser = MASTER_CONFIG.AUTHORIZED_USERS.find(
-      u => u.email.toLowerCase() === id?.trim().toLowerCase() && u.password === pass?.trim()
-    );
-    if (matchedUser || id === 'guest') {
-      const userData = matchedUser || { email: 'guest@agrisense.io', name: 'Guest Farmer', location: 'Field Zone A', isGuest: true };
+    // Only used for mock guest login now. Real auth is handled in Login.jsx
+    if (id === 'guest') {
+      const userData = { email: 'guest@agrisense.io', name: 'Guest Farmer', location: 'Field Zone A', isGuest: true };
       setUser(userData);
       localStorage.setItem('agrisense_user', JSON.stringify(userData));
       return true;
@@ -140,21 +649,31 @@ export const AppProvider = ({ children }) => {
   };
 
   const logout = () => { 
-    const defaultUser = { name: 'Guest Farmer', email: 'guest@agrisense.io', isGuest: true };
-    setUser(defaultUser); 
-    localStorage.setItem('agrisense_user', JSON.stringify(defaultUser));
+    const uid = user?.uid;
+    signOut(auth).catch(console.error);
+    setUser(null); 
+    localStorage.removeItem('agrisense_user');
+    // Clear all user-scoped data so the next user starts fresh
+    clearAllUserData();
+    setFields([]);
+    setActiveFieldId(null);
+    setSelectedAnalyticsFieldId(null);
+    setAnalyticsSnapshotsByField({});
+    setDailyAnalyticsReports({});
+    setSensorHistory([]);
+    void uid; // suppress lint
   };
 
   const toggleActuator = (key) => {
     const newState = !actuators[key];
     setActuators(prev => ({ ...prev, [key]: newState }));
     
-    // Global ESP-CAM HTTP toggles
-    const CAM_IP = 'http://192.168.4.2';
+    // Global ESP Nodes HTTP toggles (Static IP bindings)
+    const SENSOR_IP = 'http://192.168.29.200';
     if (key === ACTUATORS.LIGHT) {
-      fetch(`${CAM_IP}/light?state=${newState ? 'on' : 'off'}`).catch(() => {});
+      fetch(`${SENSOR_IP}/light?state=${newState ? 'on' : 'off'}`).catch(() => {});
     } else if (key === ACTUATORS.BUZZER) {
-      fetch(`${CAM_IP}/buzzer?state=${newState ? 'on' : 'off'}`).catch(() => {});
+      fetch(`${SENSOR_IP}/buzzer?state=${newState ? 'on' : 'off'}`).catch(() => {});
     }
 
     if (!MASTER_CONFIG.USE_MOCK_DATA) {
@@ -214,12 +733,12 @@ export const AppProvider = ({ children }) => {
   // 3. Sensor History Logger (Stateful Sync with Multi-Tab Persistence)
   const [sensorHistory, setSensorHistory] = useState(() => {
     try {
-      const saved = localStorage.getItem('agrisense_history');
+      const uid = (() => { try { return JSON.parse(localStorage.getItem('agrisense_user'))?.uid; } catch { return null; } })();
+      const saved = localStorage.getItem(lsKey(uid, 'agrisense_history'));
       if (!saved) return [];
       const parsed = JSON.parse(saved);
-      // 🧪 MIGRATION: Clear history if it's corrupted (timestamp: 0 or missing)
       if (Array.isArray(parsed) && parsed.length > 0 && (!parsed[0].timestamp || parsed[0].timestamp < 1000000)) {
-        localStorage.removeItem('agrisense_history');
+        localStorage.removeItem(lsKey(uid, 'agrisense_history'));
         return [];
       }
       return Array.isArray(parsed) ? parsed : [];
@@ -273,7 +792,7 @@ export const AppProvider = ({ children }) => {
     const timer = setTimeout(() => {
       if (sensorHistory.length > lastSavedLen.current) {
         try {
-          localStorage.setItem('agrisense_history', JSON.stringify(sensorHistory));
+          localStorage.setItem(lsKey(user?.uid, 'agrisense_history'), JSON.stringify(sensorHistory));
           lastSavedLen.current = sensorHistory.length;
         } catch (e) {
           console.warn("Storage Full - pruning history");
@@ -434,151 +953,104 @@ export const AppProvider = ({ children }) => {
     }
   }, [mqttStatus]);
 
-  // 5. Weather Satellite & Forecast Link
+  // 5. Weather Satellite & Forecast Link (Open-Meteo)
   useEffect(() => {
+    const getWeatherDetails = (code) => {
+      if (code === 0) return { condition: 'Clear', icon: '01d' };
+      if (code === 1 || code === 2) return { condition: 'Partly Cloudy', icon: '02d' };
+      if (code === 3) return { condition: 'Overcast', icon: '04d' };
+      if (code === 45 || code === 48) return { condition: 'Fog', icon: '50d' };
+      if (code >= 51 && code <= 55) return { condition: 'Drizzle', icon: '09d' };
+      if (code >= 61 && code <= 65) return { condition: 'Rain', icon: '10d' };
+      if (code >= 71 && code <= 77) return { condition: 'Snow', icon: '13d' };
+      if (code >= 80 && code <= 82) return { condition: 'Showers', icon: '09d' };
+      if (code >= 95 && code <= 99) return { condition: 'Thunderstorm', icon: '11d' };
+      return { condition: 'Unknown', icon: '01d' };
+    };
+
     const fetchWeather = async () => {
       try {
-        const key = MASTER_CONFIG.OPENWEATHER_API_KEY;
-        if (!key || key.includes("VITE_")) {
-          console.warn("AgriSense Weather: No valid OpenWeather API key found.");
-          throw new Error("Missing API Key");
+        let lat = 22.57, lon = 88.36;
+        if (activeField?.location) {
+          const coords = activeField.location.split(',');
+          if (coords.length === 2) {
+            lat = parseFloat(coords[0].trim());
+            lon = parseFloat(coords[1].trim());
+          }
+        } else if (user?.location && user.location.includes('•')) {
+          const coords = user.location.split('•')[0].split(',');
+          if (coords.length === 2) {
+            lat = parseFloat(coords[0].replace(/[^\d.-]/g, ''));
+            lon = parseFloat(coords[1].replace(/[^\d.-]/g, ''));
+          }
         }
-        
-        let lat, lon;
-        let cityQuery = MASTER_CONFIG.WEATHER_CITY || "Kolkata";
 
-        // ─── 1. RESOLVE LOCATION (GPS -> PROFILE -> CONFIG) ───
-        try {
-          const fetchPos = () => new Promise((resolve, reject) => {
-            const options = { timeout: 6000, enableHighAccuracy: false };
-            import('@capacitor/geolocation').then(({ Geolocation }) => {
-              Geolocation.getCurrentPosition(options).then(resolve).catch(() => {
-                navigator.geolocation.getCurrentPosition(resolve, reject, options);
-              });
-            }).catch(() => {
-              navigator.geolocation.getCurrentPosition(resolve, reject, options);
-            });
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max&timezone=auto`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Weather fetch failed");
+        const data = await res.json();
+
+        const current = data.current;
+        const details = getWeatherDetails(current.weather_code);
+
+        setApiWeather({
+          temp: Math.round(current.temperature_2m),
+          feelsLike: Math.round(current.apparent_temperature),
+          humidity: current.relative_humidity_2m,
+          pressure: current.surface_pressure,
+          windSpeed: `${Math.round(current.wind_speed_10m)} km/h`,
+          clouds: current.cloud_cover,
+          visibility: '---', 
+          condition: details.condition,
+          icon: details.icon,
+          city: activeField?.name || 'Field',
+          aqi: '---', 
+          uv: '---',
+          sunrise: data.daily?.sunrise?.[0] ? new Date(data.daily.sunrise[0]).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--',
+          sunset: data.daily?.sunset?.[0] ? new Date(data.daily.sunset[0]).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--',
+          lastUpdate: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        });
+
+        if (data.daily && data.daily.time) {
+          const forecast = data.daily.time.slice(0, 5).map((timeStr, idx) => {
+            const code = data.daily.weather_code[idx];
+            const detail = getWeatherDetails(code);
+            return {
+              date: new Date(timeStr).toLocaleDateString([], { weekday: 'short' }),
+              temp: Math.round((data.daily.temperature_2m_max[idx] + data.daily.temperature_2m_min[idx]) / 2),
+              condition: detail.condition,
+              rainProb: `${data.daily.precipitation_probability_max[idx]}%`
+            };
           });
-
-          const pos = await fetchPos();
-          lat = pos.coords.latitude;
-          lon = pos.coords.longitude;
-        } catch (gpsErr) {
-          // GPS Failed, check profile for "Lat, Lon • City" pattern
-          if (user?.location && user.location.includes('•')) {
-            const parts = user.location.split('•');
-            const coords = parts[0].split(',');
-            if (coords.length === 2) {
-              lat = parseFloat(coords[0].replace(/[^\d.-]/g, ''));
-              lon = parseFloat(coords[1].replace(/[^\d.-]/g, ''));
-            }
-            if (parts[1]) cityQuery = parts[1].trim();
-          } else if (user?.location) {
-            cityQuery = user.location;
-          }
+          setApiForecast(forecast);
         }
 
-        // ─── 2. FETCH CURRENT WEATHER ───
-        const isCoordsValid = lat != null && lon != null && !isNaN(lat) && !isNaN(lon);
-        const baseUrl = "https://api.openweathermap.org/data/2.5";
-        const locationParams = isCoordsValid ? `lat=${lat}&lon=${lon}` : `q=${encodeURIComponent(cityQuery)}`;
-        
-        const weatherUrl = `${baseUrl}/weather?${locationParams}&units=metric&appid=${key}`;
-        const weatherRes = await fetch(weatherUrl);
-        
-        if (!weatherRes.ok) throw new Error(`Weather API Error: ${weatherRes.status}`);
-        const currData = await weatherRes.json();
-        
-        if (currData && currData.main) {
-          const { lat: fLat, lon: fLon } = currData.coord;
-          
-          // Fetch AQI & UV in parallel
-          const [aqiRes, uvRes] = await Promise.all([
-            fetch(`${baseUrl}/air_pollution?lat=${fLat}&lon=${fLon}&appid=${key}`),
-            fetch(`${baseUrl}/uvi?lat=${fLat}&lon=${fLon}&appid=${key}`)
-          ]).catch(() => [null, null]);
-
-          let aqiLabel = '---', uvIndex = 'Low';
-          
-          if (aqiRes?.ok) {
-            const aqiData = await aqiRes.json();
-            const aqiVal = aqiData?.list?.[0]?.main?.aqi;
-            aqiLabel = { 1: 'Good', 2: 'Fair', 3: 'Moderate', 4: 'Poor', 5: 'Critical' }[aqiVal] || '---';
-          }
-          
-          if (uvRes?.ok) {
-            const uvData = await uvRes.json();
-            const uvVal = uvData?.value;
-            uvIndex = uvVal < 3 ? 'Low' : (uvVal < 6 ? 'Mod' : (uvVal < 8 ? 'High' : 'Extreme'));
-          }
-
-          setApiWeather({
-            temp: currData.main.temp,
-            feelsLike: Math.round(currData.main.feels_like),
-            humidity: currData.main.humidity,
-            pressure: currData.main.pressure,
-            windSpeed: `${Math.round(currData.wind?.speed * 3.6)} km/h`,
-            clouds: currData.clouds?.all,
-            visibility: currData.visibility ? `${(currData.visibility / 1000).toFixed(1)} km` : '---',
-            condition: currData.weather?.[0]?.main,
-            icon: currData.weather?.[0]?.icon,
-            city: currData.name,
-            aqi: aqiLabel,
-            uv: uvIndex,
-            sunrise: new Date(currData.sys.sunrise * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            sunset: new Date(currData.sys.sunset * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            lastUpdate: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          });
-        }
-
-        // ─── 3. FETCH 5-DAY FORECAST ───
-        const forecastUrl = `${baseUrl}/forecast?${locationParams}&units=metric&appid=${key}`;
-        const foreRes = await fetch(forecastUrl);
-        if (foreRes.ok) {
-          const foreData = await foreRes.json();
-          if (foreData?.list) {
-            // Group by day and take the noon forecast
-            const daily = foreData.list
-              .filter(f => f.dt_txt.includes("12:00:00"))
-              .map(f => ({
-                date: new Date(f.dt * 1000).toLocaleDateString([], { weekday: 'short' }),
-                temp: Math.round(f.main.temp),
-                condition: f.weather[0].main,
-                rainProb: f.pop != null ? `${Math.round(f.pop * 100)}%` : (f.rain ? '40%' : '0%')
-              }));
-            setApiForecast(daily);
-          }
-        }
+        const cCode = current.weather_code;
+        if (cCode >= 95) setGlobalWeatherAlert("High Storm Warning: Thunderstorms detected in regional area.");
+        else if (cCode === 65 || cCode === 82) setGlobalWeatherAlert("Heavy Rain / Flood Alert: Heavy precipitation detected.");
+        else setGlobalWeatherAlert(null);
 
       } catch (err) {
-        console.error("AgriSense Weather Sync Failed:", err.message);
-        // Fallback to Hardware sensors if available
-        if (sensorData?.weather?.temp != null) {
-          setApiWeather(prev => ({
-            ...prev,
-            temp: sensorData.weather.temp,
-            humidity: sensorData.weather.humidity,
-            condition: 'Hardware Link',
-            city: 'Field A (Live)',
-            lastUpdate: 'Now'
-          }));
-        }
+        console.error("Open-Meteo Sync Failed:", err);
+        setGlobalWeatherAlert("Unable to fetch regional weather data. Sensor data will be used if available.");
       }
     };
 
     fetchWeather();
     const weatherTimer = setInterval(fetchWeather, 600000); // 10 mins
     return () => clearInterval(weatherTimer);
-  }, [user?.location, sensorData?.weather?.temp]);
+  }, [activeField?.location, user?.location]);
 
   return (
     <AppContext.Provider value={{
       user, login, logout, updateUser, farmInfo, updateBranding,
-      isDarkMode, toggleTheme, sensorData, apiWeather, apiForecast, recommendations, sensorHistory,
+      fields, activeField, activeFieldId, addField, updateField, deleteField, switchField,
+      selectedAnalyticsFieldId, setSelectedAnalyticsFieldId, analyticsSnapshotsByField, dailyAnalyticsReports, setDailyAnalyticsReports,
+      isDarkMode, toggleTheme, sensorData, apiWeather, apiForecast, globalWeatherAlert, recommendations, sensorHistory,
       actuators, toggleActuator, isSidebarOpen, setIsSidebarOpen, ACTUATORS,
       farmHealthScore, systemHealth, connectivityStatus, cloudSyncStatus, profileMeta, updateProfileMeta,
       isDataLoading, lastGlobalUpdate, mqttStatus, syncData, syncDeviceId,
-      devices, systemOverview, apiWeather, apiForecast
+      devices, systemOverview, language, changeLanguage, t
     }}>
       {children}
     </AppContext.Provider>

@@ -1,18 +1,31 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, Settings as SettingsIcon,
   CloudRain, Archive, FlaskConical, Camera,
   Sparkles, BarChart2, Network, BellRing,
-  Sprout, Droplets, FileText
+  Sprout, Droplets, FileText, LogOut
 } from 'lucide-react';
 import { useApp } from '../state/AppContext';
+import { auth, signOut } from '../firebase';
 
 const Sidebar = () => {
-  const { user, isSidebarOpen, setIsSidebarOpen, farmInfo, mqttStatus } = useApp();
+  const { user, isSidebarOpen, setIsSidebarOpen, farmInfo, mqttStatus, t } = useApp();
   const location = useLocation();
+  const navigate = useNavigate();
   const close = () => setIsSidebarOpen(false);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      close();
+      navigate('/login');
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   const farmName     = farmInfo?.projectName || 'InnovateX';
   const clientName   = farmInfo?.name        || 'SemiColon';
@@ -20,30 +33,30 @@ const Sidebar = () => {
 
   const sidebarGroups = [
     {
-      title: 'Field Monitoring',
+      title: t('field_monitoring'),
       links: [
-        { name: 'Soil Monitor',     path: '/soil-monitoring',        icon: Sprout,    desc: 'NPK · pH · Moisture' },
-        { name: 'Irrigation',       path: '/irrigation',             icon: Droplets,  desc: 'Pump · Flow · Level' },
-        { name: 'Weather Station',  path: '/weather',                icon: CloudRain, desc: 'Temp · Rain · Light' },
-        { name: 'Storage Hub',      path: '/storage-hub',            icon: Archive,   desc: 'Gas · Humidity · Temp' },
+        { name: t('soil_monitor'),     path: '/soil-monitoring',        icon: Sprout,    desc: 'NPK · pH · Moisture' },
+        { name: t('irrigation'),       path: '/irrigation',             icon: Droplets,  desc: 'Pump · Flow · Level' },
+        { name: t('weather_station'),  path: '/weather',                icon: CloudRain, desc: 'Temp · Rain · Light' },
+        { name: t('storage_hub'),      path: '/storage-hub',            icon: Archive,   desc: 'Gas · Humidity · Temp' },
       ]
     },
     {
-      title: 'Intelligence',
+      title: t('intelligence'),
       links: [
-        { name: 'AI Advisor',       path: '/crop-advisor',           icon: Sparkles,  desc: 'Crop recommendations' },
-        { name: 'Soil Forensics',   path: '/precision-soil-testing', icon: FlaskConical, desc: 'Deep soil analysis' },
-        { name: 'Analytics',        path: '/analytics',              icon: BarChart2, desc: 'Trend charts & data' },
-        { name: 'Farm Reports',     path: '/reports',                icon: FileText,  desc: 'Summary reports' },
+        { name: t('ai_advisor'),       path: '/crop-advisor',           icon: Sparkles,  desc: 'Crop recommendations' },
+        { name: t('soil_forensics'),   path: '/precision-soil-testing', icon: FlaskConical, desc: 'Deep soil analysis' },
+        { name: t('analytics'),        path: '/analytics',              icon: BarChart2, desc: 'Trend charts & data' },
+        { name: t('farm_reports'),     path: '/reports',                icon: FileText,  desc: 'Summary reports' },
       ]
     },
     {
-      title: 'Operations',
+      title: t('operations'),
       links: [
-        { name: 'Field Vision',     path: '/camera',                 icon: Camera,        desc: 'Live camera feed' },
-        { name: 'Device Manager',   path: '/device-area',            icon: Network,       desc: 'Node status & controls' },
-        { name: 'Alert Center',     path: '/alerts',                 icon: BellRing,      desc: 'Notifications' },
-        { name: 'Settings',         path: '/settings',               icon: SettingsIcon,  desc: 'Config & pairing' },
+        { name: t('field_vision'),     path: '/camera',                 icon: Camera,        desc: 'Live camera feed' },
+        { name: t('device_manager'),   path: '/device-area',            icon: Network,       desc: 'Node status & controls' },
+        { name: t('alert_center'),     path: '/alerts',                 icon: BellRing,      desc: 'Notifications' },
+        { name: t('settings'),         path: '/settings',               icon: SettingsIcon,  desc: 'Config & pairing' },
       ]
     }
   ];
@@ -80,7 +93,10 @@ const Sidebar = () => {
           </motion.button>
 
           {/* Avatar + Name */}
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div 
+            style={{ display: 'flex', gap: '12px', alignItems: 'center', cursor: 'pointer', padding: '4px', borderRadius: '16px', transition: 'background 0.2s' }} 
+            onClick={() => { close(); navigate('/profile'); }}
+          >
             <div style={{ position: 'relative' }}>
               <img
                 src={user?.photo || 'https://images.unsplash.com/photo-1593113598332-cd288d649433?auto=format&fit=crop&q=80&w=200'}
@@ -160,10 +176,34 @@ const Sidebar = () => {
         </div>
 
         {/* ── FOOTER ── */}
-        <div style={{ padding: '12px 18px 20px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <div style={{ textAlign: 'center' }}>
+        <div style={{ padding: '16px 18px 20px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          
+          <div style={{ 
+            background: 'linear-gradient(to right, rgba(16,185,129,0.1), rgba(16,185,129,0.05))', 
+            border: '1px solid rgba(16,185,129,0.2)', 
+            borderRadius: '12px', padding: '10px 14px',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+          }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'rgba(255,255,255,0.8)' }}>{t('current_plan')}</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 900, color: '#10B981' }}>AgriSense (Pro)</span>
+          </div>
+
+          <button 
+            onClick={handleLogout}
+            style={{ 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              width: '100%', padding: '10px', borderRadius: '12px',
+              background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)',
+              color: '#EF4444', fontSize: '0.85rem', fontWeight: 800, cursor: 'pointer',
+              transition: 'background 0.2s'
+            }}
+          >
+            <LogOut size={16} /> {t('logout')}
+          </button>
+
+          <div style={{ textAlign: 'center', margin: '8px 0 0' }}>
             <div style={{ fontSize: '0.65rem', color: '#10B981', fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', opacity: 0.5 }}>AgriSense Pro · v17.1.0</div>
-            <div style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.2)', fontWeight: 600, marginTop: '2px' }}>by Prolayjit Biswas</div>
+            <div style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.2)', fontWeight: 600, marginTop: '2px' }}>Created by Team Semicolon</div>
           </div>
         </div>
       </motion.div>

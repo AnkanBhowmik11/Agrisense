@@ -4,20 +4,9 @@
  * Board: AI Thinker ESP32-CAM
  *
  * Role:
- *   - Joins the WiFi AP created by the Sensor ESP32 ("AgriSense_IoT")
- *   - Gets a fixed IP from the AP: 192.168.4.2
- *   - Serves MJPEG stream at http://192.168.4.2/stream
- *   - The dashboard at 192.168.4.1 auto-connects to this stream
- *
- * NO buzzer, NO LED, NO relay — those are on the Sensor ESP32.
- *
- * Upload:
- *   Use a USB-TTL / FTDI adapter:
- *     TX  → UOR (RXD pin)
- *     RX  → UOT (TXD pin)
- *     GND → GND
- *     5V  → 5V
- *     IO0 → GND  ← only during flashing, remove after upload
+ *   - Connects to your Home Wi-Fi network.
+ *   - Serves MJPEG stream at http://<ASSIGNED_IP>:81/stream
+ *   - Note the IP address in the Serial Monitor and put it in agrisense_vision_backend.py
  *
  * Board setting in Arduino IDE: "AI Thinker ESP32-CAM"
  */
@@ -26,10 +15,9 @@
 #include "esp_http_server.h"
 #include "WiFi.h"
 
-// ── Must match the AP created by the Sensor ESP32 ─────────────────
-#define WIFI_SSID  "AgriSense_IoT"
-#define WIFI_PASS  "admin1234"
-// ──────────────────────────────────────────────────────────────────
+// ─── Home Wi-Fi Credentials ───────────────────────────────────────────────────
+#define WIFI_SSID  "Jiofiber-4gh"
+#define WIFI_PASS  "bharat@9051"
 
 // AI-Thinker ESP32-CAM pin map (do NOT change)
 #define PWDN_GPIO_NUM     32
@@ -62,12 +50,11 @@ static camera_config_t cam_cfg = {
   .ledc_channel  = LEDC_CHANNEL_0,
   .pixel_format  = PIXFORMAT_JPEG,
   .frame_size    = FRAMESIZE_VGA,   // 640×480
-  .jpeg_quality  = 14,              // 0 best, 63 worst
+  .jpeg_quality  = 14,              
   .fb_count      = 2,
   .grab_mode     = CAMERA_GRAB_WHEN_EMPTY
 };
 
-// ── MJPEG stream handler ───────────────────────────────────────────
 static esp_err_t streamHandler(httpd_req_t *req) {
   camera_fb_t *fb = NULL;
   char part_buf[64];
@@ -88,7 +75,6 @@ static esp_err_t streamHandler(httpd_req_t *req) {
   return ESP_OK;
 }
 
-// ── Single JPEG capture ───────────────────────────────────────────
 static esp_err_t captureHandler(httpd_req_t *req) {
   camera_fb_t *fb = esp_camera_fb_get();
   if (!fb) {
@@ -101,15 +87,7 @@ static esp_err_t captureHandler(httpd_req_t *req) {
   httpd_resp_set_hdr(req, "Content-Disposition", "attachment; filename=agrisense.jpg");
   httpd_resp_send(req, (const char *)fb->buf, fb->len);
   esp_camera_fb_return(fb);
-  Serial.println("[CAM] Capture served");
   return ESP_OK;
-}
-
-// ── Root redirect → sensor dashboard ──────────────────────────────
-static esp_err_t rootHandler(httpd_req_t *req) {
-  httpd_resp_set_hdr(req, "Location", "http://192.168.4.1");
-  httpd_resp_set_status(req, "302 Found");
-  return httpd_resp_send(req, NULL, 0);
 }
 
 static void startCamServer() {
@@ -119,14 +97,12 @@ static void startCamServer() {
   httpd_handle_t server = NULL;
   if (httpd_start(&server, &config) == ESP_OK) {
     httpd_uri_t capture_uri = { .uri = "/capture", .method = HTTP_GET, .handler = captureHandler };
-    httpd_uri_t root_uri    = { .uri = "/",        .method = HTTP_GET, .handler = rootHandler    };
     httpd_register_uri_handler(server, &capture_uri);
-    httpd_register_uri_handler(server, &root_uri);
     Serial.println("[CAM] Control server started on port 80 (/capture)");
   }
 
   config.server_port = 81;
-  config.ctrl_port = 32769; // Use alternate control port for second server instance
+  config.ctrl_port = 32769; 
   httpd_handle_t stream_server = NULL;
   if (httpd_start(&stream_server, &config) == ESP_OK) {
     httpd_uri_t stream_uri  = { .uri = "/stream",  .method = HTTP_GET, .handler = streamHandler  };
@@ -140,33 +116,44 @@ void setup() {
   delay(300);
   Serial.println("\n=== AgriSense Camera Node ===");
 
-  // Init camera
   if (esp_camera_init(&cam_cfg) != ESP_OK) {
     Serial.println("[CAM] Camera init FAILED — check ribbon cable & 5V supply");
     return;
   }
   Serial.println("[CAM] Camera OK");
 
-  // Join the Sensor ESP32's AP — will receive IP 192.168.4.2
+  // Hardcoded IP for JioFiber (192.168.29.x)
+  IPAddress local_IP(192, 168, 29, 201);
+  IPAddress gateway(192, 168, 29, 1);
+  IPAddress subnet(255, 255, 255, 0);
+  IPAddress primaryDNS(8, 8, 8, 8);
+  IPAddress secondaryDNS(8, 8, 4, 4);
+
+  // Join the Home Wi-Fi
   WiFi.mode(WIFI_STA);
+  if (!WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS)) {
+    Serial.println("STA Failed to configure");
+  }
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   Serial.printf("[WiFi] Joining '%s'", WIFI_SSID);
 
   unsigned long t0 = millis();
   while (WiFi.status() != WL_CONNECTED) {
-    if (millis() - t0 > 15000) {
-      Serial.println("\n[WiFi] Timeout — could not join AgriSense_IoT AP");
+    if (millis() - t0 > 25000) {
+      Serial.println("\n[WiFi] Timeout — could not join AP. Please restart.");
       return;
     }
-    delay(400);
+    delay(500);
     Serial.print(".");
   }
-  Serial.printf("\n[CAM] IP: %s\n", WiFi.localIP().toString().c_str());
-  Serial.printf("[CAM] Stream: http://%s/stream\n", WiFi.localIP().toString().c_str());
+  
+  Serial.println("\n[WiFi] Connected!");
+  Serial.printf("[CAM] IP Address: %s\n", WiFi.localIP().toString().c_str());
+  Serial.printf("[CAM] Stream URL: http://%s:81/stream\n", WiFi.localIP().toString().c_str());
 
   startCamServer();
 }
 
 void loop() {
-  delay(1000);  // Camera server runs on its own FreeRTOS task
+  delay(1000);  
 }

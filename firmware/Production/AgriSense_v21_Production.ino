@@ -27,15 +27,19 @@
 const char* primaryId   = "innovatex";  
 const char* secondaryId = "semicolon"; 
 
-// WiFi Credentials
-const char* ssid     = "YOUR_WIFI_SSID";         
-const char* password = "YOUR_WIFI_PASSWORD"; 
-
 // MQTT Broker (HiveMQ Public)
 const char* mqtt_broker = "broker.hivemq.com";
 const int mqtt_port     = 1883;
 
+
+// WiFi Credentials — fill in your home WiFi
+const char* ssid     = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+
+
 // ─── 📍 PIN MAPPING (NODE-WISE) ─────────────────────────────────────────────
+
+
 
 // 1. 🌱 SOIL NODE (Root Zone Analysis)
 #define MOISTURE_PIN 34    // Soil Moisture (Analog)

@@ -1,4 +1,14 @@
-# Tasks We've Done So Far:
+# Tasks We've Done Today (May 2, 2026):
+1. **AI Farm Advisor**: Transformed the Advisory dashboard into an interactive Groq AI-powered intelligence hub with field diagnostic cards and live sensor integrations.
+2. **Hardware Diagnostics**: The AI now monitors sensor integrity, explicitly advising users to check hardware components if data readings hit absolute zero.
+3. **Smart Notification Engine**: Built a background Notification Engine inside `TopBar.jsx`. It fetches live global weather via the `Open-Meteo API`, combines it with live hardware telemetry, and passes it to Groq's LLM every hour to generate color-coded (Critical/Normal) action alerts.
+4. **Notification Center**: Replaced the alerts page with an immersive, animated modal dropdown accessed directly from the bell icon, complete with flashing severity indicators.
+5. **Sidebar Enhancements**: Added an `AgriSense (Pro)` plan highlight box, a dedicated Firebase `Log Out` button, and linked the profile avatar to the Account page.
+6. **Rebranding**: Updated authorship across all files, PDF reports, and UI elements to exclusively credit **Team Semicolon**.
+
+---
+
+# Tasks We've Done So Far (May 1,2026):
 1. Identified that the ESP32-CAM's single-threaded server blocks capture commands while streaming.
 2. Attempted an HTML5 Canvas snapshot, but CORS restrictions on MJPEG streams broke the video feed.
 3. Created a Dual-Server Architecture on the ESP32-CAM (Port 81 for stream, Port 80 for capture) to fix the blocking issue.

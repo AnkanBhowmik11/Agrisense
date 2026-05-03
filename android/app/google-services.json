@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "780397312104",
+    "project_id": "agrisense-33df5",
+    "storage_bucket": "agrisense-33df5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:780397312104:android:ac9091153ca093814863dd",
+        "android_client_info": {
+          "package_name": "com.agrisense.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "780397312104-043qqhsdq55tprtjnqgrei4t37cvfo21.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.agrisense.app",
+            "certificate_hash": "ab1cf78864d4d9aa1dd5dc1ebf292809a56f025b"
+          }
+        },
+        {
+          "client_id": "780397312104-9ld2226jsulitnocnjhj1p7hkd29lt2i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyApJA-gbAvpQpa1kikvX3tQ9wbMRWIXi8M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "780397312104-9ld2226jsulitnocnjhj1p7hkd29lt2i.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
